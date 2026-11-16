@@ -74,12 +74,16 @@ profile or comment segments).
 | `example_farmA_2.jpg` | Farm A, a second frame of the released dataset after masking (2304 x 1296) | approved by the data owner, added |
 | `example_farmB_1.jpg` | Farm B, a frame of the released dataset after masking (1280 x 720) | approved by the data owner, added |
 
-**Being selected.** More masked stills are being selected: frames from the
-Farm A recordings FarmA_R2 and FarmA_R3, and frames in which small,
-hard-to-see people were detected and masked. Candidate frames of the masked
-release have been prepared; each is added only after a person has checked it
-by eye for any person left unmasked and for readable on-screen text (rules 1
-and 3).
+| `example_farmA_r3.jpg` | FarmA_R3, two people masked (1920 x 1080) | approved by the data owner, added |
+| `example_farmA_r2_small.jpg` | FarmA_R2, a partly visible person of 40 x 29 px masked (1280 x 720) | approved by the data owner, added |
+| `example_farmA_r2_small_annotated.jpg` | The same frame with the mosaic outlined and a 3x inset of it, cut from the same masked pixels | approved by the data owner, added |
+| `example_farmA_r2_lowscore.jpg` | FarmA_R2, a partly visible person of 29 x 58 px with detector score 0.25, masked (1280 x 720) | approved by the data owner, added |
+| `example_farmB_small.jpg` | FarmB_R1, a partly visible person of 47 x 84 px masked (1280 x 720) | approved by the data owner, added |
+
+The data owner checked every still by eye for any person left unmasked and
+for readable on-screen text (rules 1 and 3) before approving it. In the five
+FarmA_R2 / FarmA_R3 / hard-case stills, a human reviewer had also confirmed
+in the review tool that every person is covered.
 
 ## Diagrams
 

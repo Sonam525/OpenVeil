@@ -128,9 +128,17 @@ shown with the data owner's approval; no unmasked person is shown.
 |---|---|---|
 | Farm A, a frame of the released dataset after masking | Farm A, a second frame of the released dataset after masking | Farm B, a frame of the released dataset after masking |
 
-Further examples (Farm A recordings FarmA_R2 and FarmA_R3, and frames with
-small, hard-to-see people that were found and masked) are being selected; each
-is added only after a person has checked it by eye for anyone left unmasked.
+| ![Farm A (FarmA_R3), two people masked](docs/img/example_farmA_r3.jpg) | ![Farm A (FarmA_R2), a small, partly visible person masked](docs/img/example_farmA_r2_small.jpg) | ![The same frame with the mosaic outlined and enlarged](docs/img/example_farmA_r2_small_annotated.jpg) |
+|---|---|---|
+| FarmA_R3: two people masked (1920 x 1080 frame) | FarmA_R2: one partly visible person only 40 x 29 px (0.13% of the frame), found and masked | The same frame: the outline marks the mosaic, and the inset enlarges it 3x |
+
+**Hard cases.** Small or partly visible people that the pipeline still found
+and masked. In every example frame a human reviewer confirmed that each
+person is covered, and the reviewer added no box.
+
+| ![Farm A (FarmA_R2), a partly visible person with a low detector score, masked](docs/img/example_farmA_r2_lowscore.jpg) | ![Farm B, a small, partly visible person masked](docs/img/example_farmB_small.jpg) |
+|---|---|
+| FarmA_R2: a partly visible person, 29 x 58 px (0.18% of the frame); the detector scored it only 0.25, yet the verifier kept it and it was masked | FarmB_R1: a partly visible person, 47 x 84 px (0.43% of the frame), found and masked |
 
 The outcomes in numbers (from [docs/case_study.md](docs/case_study.md)):
 

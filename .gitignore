@@ -86,6 +86,11 @@ workers/
 !/docs/img/example_farmA_1.jpg
 !/docs/img/example_farmA_2.jpg
 !/docs/img/example_farmB_1.jpg
+!/docs/img/example_farmA_r3.jpg
+!/docs/img/example_farmA_r2_small.jpg
+!/docs/img/example_farmA_r2_small_annotated.jpg
+!/docs/img/example_farmA_r2_lowscore.jpg
+!/docs/img/example_farmB_small.jpg
 
 # Review folders hold unmasked frames: never commit them (the package openveil/review/ is code).
 # `openveil review build` also writes a .gitignore that ignores everything into its output folder.

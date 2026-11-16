@@ -122,10 +122,16 @@ A drawn, synthetic illustration of the mosaic (no footage) is in
 [img/mosaic_grid.png](img/mosaic_grid.png); the README lists example outcomes
 of the case study in a table.
 
-> **More examples being selected.** Further masked frames from the Farm A
-> recordings FarmA_R2 and FarmA_R3, and frames in which small, hard-to-see
-> people were found and masked, are being selected; each is added only after a
-> person has checked it by eye for anyone left unmasked.
+More frames from the other two Farm A recordings and hard cases: small or
+partly visible people that the pipeline still found and masked. In each of
+these frames a human reviewer confirmed that every person is covered and added
+no box.
+
+| ![Farm A (FarmA_R3), two people masked](img/example_farmA_r3.jpg) | ![Farm A (FarmA_R2), a small, partly visible person masked](img/example_farmA_r2_small.jpg) | ![The same frame with the mosaic outlined and enlarged](img/example_farmA_r2_small_annotated.jpg) |
+|---|---|---|
+| FarmA_R3: two people masked | FarmA_R2: one partly visible person only 40 x 29 px (0.13% of the frame) | The same frame: the outline marks the mosaic, and the inset enlarges it 3x |
+| ![Farm A (FarmA_R2), a partly visible person with a low detector score, masked](img/example_farmA_r2_lowscore.jpg) | ![Farm B, a small, partly visible person masked](img/example_farmB_small.jpg) | |
+| FarmA_R2: a partly visible person, 29 x 58 px (0.18%); detector score only 0.25, kept by the verifier | FarmB_R1: a partly visible person, 47 x 84 px (0.43%) | |
 
 ## Lessons for other datasets
 
