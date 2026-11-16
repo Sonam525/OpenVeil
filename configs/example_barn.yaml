@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Haiyu Yang and Miel Hostens
+#
+# The case-study setup (see docs/case_study.md): fixed cameras in calf barns, people at work
+# among the animals, infrared at night. Only the values that differ from the 'production'
+# preset are listed; everything else comes from the preset.
+#
+#   openveil detect videos/ --out tables/ --config configs/example_barn.yaml
+preset: production
+
+proposer:
+  # Naming the animals in the prompt gives the model somewhere else to put them, so a calf is
+  # less often scored as a person. Only the positive phrases count towards a box's score.
+  prompt: "worker. person. cow. calf."
+  positive_phrases: [worker, person]
+  competitor_phrases: [cow, calf]
+
+verifier:
+  # The released crop verifier weights (LoRA adapter + head, DINOv3 License; see
+  # docs/model_card.md), downloaded from the Hugging Face Hub with
+  #   huggingface_hub.snapshot_download("Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16",
+  #                                     local_dir="weights/OpenVeil-Verifier-DINOv3-ViT-L16")
+  # Paths are relative to the folder you run openveil from. Without weights, set mode: none.
+  mode: crop
+  adapter_dir: weights/OpenVeil-Verifier-DINOv3-ViT-L16
+  head_path: weights/OpenVeil-Verifier-DINOv3-ViT-L16/head.safetensors
+
+schedule:
+  day_night:
+    # The case study read the recording start from the file name (..._YYYYMMDD-HHMMSS...) and
+    # scanned 06:00-23:00 with the full schedule and the night sparsely (one checkpoint every
+    # 5 s, no dense mode). Use always_full when the camera clock is not in the file names.
+    policy: clock
+    day_start: 6
+    day_end: 23
+    night_mode: sparse

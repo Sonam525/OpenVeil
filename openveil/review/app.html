@@ -1,0 +1,477 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- Copyright 2026 Haiyu Yang and Miel Hostens -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>OpenVeil review</title>
+<style>
+  :root { --bg:#14161a; --panel:#1d2026; --line:#2e333c; --text:#e6e8ec; --mute:#9aa1ad; --stage:#0c0d10; --green:#2fd06b; --amber:#f0a030; --red:#ef5350; --blue:#5aa9ff; --ongreen:#04210f; color-scheme:dark; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) { --bg:#f4f5f7; --panel:#ffffff; --line:#d5d9e0; --text:#1b1e23; --mute:#5c6470; --stage:#e3e6ea; --green:#16a34a; --amber:#b45309; --red:#c62828; --blue:#1d6fd8; --ongreen:#ffffff; color-scheme:light; }
+  }
+  :root[data-theme="light"] { --bg:#f4f5f7; --panel:#ffffff; --line:#d5d9e0; --text:#1b1e23; --mute:#5c6470; --stage:#e3e6ea; --green:#16a34a; --amber:#b45309; --red:#c62828; --blue:#1d6fd8; --ongreen:#ffffff; color-scheme:light; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #app { display:flex; flex-direction:column; height:100%; }
+  #top { display:flex; gap:12px; align-items:center; padding:8px 12px; background:var(--panel); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  #title { font-weight:600; white-space:nowrap; }
+  #top select, #top input[type=range] { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:4px 6px; }
+  #top select { max-width:430px; }
+  #pos { font-variant-numeric:tabular-nums; color:var(--mute); }
+  #banner { margin-left:auto; padding:3px 10px; border-radius:999px; border:1px solid var(--red); color:var(--red); font-size:12px; font-weight:600; }
+  #banner.demo { border-color:var(--blue); color:var(--blue); }
+  #banner:empty { display:none; }
+  label.chk { display:flex; gap:4px; align-items:center; color:var(--mute); cursor:pointer; }
+  #main { flex:1; display:flex; min-height:0; }
+  #stage { flex:1; display:flex; align-items:center; justify-content:center; min-width:0; position:relative; background:var(--stage); }
+  canvas { cursor:crosshair; display:block; }
+  #msg { position:absolute; left:50%; top:14px; transform:translateX(-50%); padding:6px 12px; border-radius:8px; background:var(--panel); border:1px solid var(--line); display:none; }
+  #msg.err { border-color:var(--red); color:var(--red); }
+  #side { width:340px; padding:12px; background:var(--panel); border-left:1px solid var(--line); overflow:auto; }
+  h3 { margin:14px 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--mute); font-weight:600; }
+  h3:first-child { margin-top:0; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { padding:2px 8px; border-radius:999px; background:var(--bg); border:1px solid var(--line); font-size:12px; }
+  .chip.ok { border-color:var(--green); color:var(--green); } .chip.warn { border-color:var(--amber); color:var(--amber); }
+  .note { padding:8px; border-radius:8px; background:var(--bg); border:1px solid var(--line); color:var(--mute); font-size:13px; }
+  .row { display:flex; justify-content:space-between; gap:8px; padding:3px 6px; border-radius:6px; cursor:pointer; }
+  .row:hover { background:var(--bg); } .row.sel { outline:1px solid var(--green); }
+  .row .s { color:var(--mute); font-variant-numeric:tabular-nums; }
+  button { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:7px 12px; cursor:pointer; font:inherit; }
+  button.primary { background:var(--green); color:var(--ongreen); border-color:var(--green); font-weight:600; }
+  button.primary kbd { color:var(--text); }
+  button:hover { filter:brightness(1.1); }
+  .btns { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  textarea { width:100%; height:54px; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px; resize:vertical; font:inherit; }
+  kbd { background:var(--bg); border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 5px; font-size:12px; }
+  table.keys td { padding:2px 8px 2px 0; vertical-align:top; color:var(--mute); font-size:13px; } table.keys td:first-child { white-space:nowrap; color:var(--text); }
+  .warnbox { margin-top:8px; padding:6px 8px; border:1px solid var(--red); border-radius:8px; color:var(--red); font-size:12px; }
+  .warnbox.demo { border-color:var(--blue); color:var(--blue); }
+  .warnbox:empty { display:none; }
+  @media (max-width: 760px) { #main { flex-direction:column; } #side { width:auto; border-left:0; border-top:1px solid var(--line); } #stage { min-height:50vh; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <span id="title">OpenVeil review</span>
+    <select id="queueSel" title="Queue"></select>
+    <span id="pos">-</span>
+    <select id="filterSel" title="Show">
+      <option value="all">all frames</option><option value="prop">proposal has people</option><option value="free">proposal has no people</option>
+    </select>
+    <label class="chk"><input type="checkbox" id="skipDone" checked> skip reviewed</label>
+    <label class="chk"><input type="checkbox" id="showCands" checked> candidates (C)</label>
+    <label class="chk">min score <input type="range" id="minScore" min="0" max="0.9" step="0.01" value="0.10" style="width:110px"> <span id="minScoreV">0.10</span></label>
+    <span id="banner"></span>
+  </div>
+  <div id="main">
+    <div id="stage"><canvas id="cv"></canvas><div id="msg"></div></div>
+    <div id="side">
+      <h3>Frame</h3><div id="meta" class="chips"></div>
+      <div id="reason" class="note" style="margin-top:8px"></div>
+      <h3>People in this frame (green)</h3><div id="persons"></div>
+      <h3>Model candidates (dashed)</h3><div id="cands"></div>
+      <div class="btns">
+        <button class="primary" id="bConfirm">Confirm &amp; next <kbd>Enter</kbd></button>
+        <button id="bNone">No person <kbd>N</kbd></button>
+        <button id="bUnsure">Unsure <kbd>U</kbd></button>
+        <button id="bReset">Reset <kbd>R</kbd></button>
+        <button id="bPrev" title="back">&larr;</button><button id="bNext" title="next unreviewed">&rarr;</button>
+      </div>
+      <h3>Note</h3><textarea id="note" placeholder="optional"></textarea>
+      <div id="state" class="note" style="margin-top:8px"></div>
+      <h3>Keys</h3>
+      <table class="keys">
+        <tr><td><kbd>Enter</kbd> <kbd>Space</kbd></td><td>save this frame as shown and go to the next</td></tr>
+        <tr><td>click dashed box</td><td>it is a person: turns green (a big low-score box needs <kbd>Shift</kbd>+click, or use the list)</td></tr>
+        <tr><td>click green box</td><td>select; <kbd>X</kbd> / <kbd>Del</kbd> removes it; drag to move, drag a handle to resize</td></tr>
+        <tr><td>drag on empty area</td><td>draw a new person box (around all visible parts of one person); hold <kbd>Shift</kbd> to draw inside a selected box</td></tr>
+        <tr><td><kbd>N</kbd></td><td>nobody in the frame (removes all green boxes)</td></tr>
+        <tr><td><kbd>U</kbd></td><td>mark unsure (saved with the frame)</td></tr>
+        <tr><td>hold <kbd>Z</kbd></td><td>4x magnifier at the cursor</td></tr>
+        <tr><td>hold <kbd>H</kbd></td><td>hide all boxes</td></tr>
+        <tr><td><kbd>C</kbd> <kbd>[</kbd> <kbd>]</kbd></td><td>show/hide candidates; lower/raise the minimum score</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>undo</td></tr>
+        <tr><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd></td><td>back to the frame you came from / next unreviewed frame, without saving (edits are kept until you reload)</td></tr>
+      </table>
+      <div id="warn" class="warnbox"></div>
+    </div>
+  </div>
+</div>
+<script nonce="__CSP_NONCE__">
+"use strict";
+const $ = id => document.getElementById(id);
+const api = (p, opt) => fetch(p, opt).then(async r => { let j = {}; try { j = await r.json(); } catch (e) {} if (!r.ok) throw new Error(j.error || r.status); return j; });
+// every string that comes from the manifest or a decision goes through esc() before it reaches innerHTML
+const esc = s => String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (v, d) => { const x = Number(v); return Number.isFinite(x) ? x : d; };
+let scripted = null;                // state requested by the URL (?state=name or single parameters): used for scripted screenshots
+const pref = {
+  get(k, d) { try { const v = localStorage.getItem('openveil.review.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { if (scripted) return; try { localStorage.setItem('openveil.review.' + k, JSON.stringify(v)); } catch (e) {} }
+};
+const DEFAULT_BANNER = 'Unmasked data - keep on this computer';
+const DEFAULT_HINT = 'Green = what would be mosaicked. Fix it so that every visible person (even a hand or a boot) has one box and nothing else does, then press Enter.';
+
+let manifest = null, qid = null, queue = [], view = [], idx = 0, F = null, img = null, loadSeq = 0, busy = false;
+let S = null;                       // working state of the open frame (null when no frame is open)
+const drafts = new Map();           // fid -> unsaved working state (kept while the page is open)
+let hist = [];                      // indices visited before the current one: the left arrow walks back through them
+let scale = 1, mouse = { x: 0, y: 0, ix: 0, iy: 0, in: false }, drag = null, lens = false, hide = false;
+const cv = $('cv'), ctx = cv.getContext('2d');
+
+function flash(text, err) { const m = $('msg'); m.textContent = text; m.className = err ? 'err' : ''; m.style.display = 'block'; clearTimeout(flash.t); flash.t = setTimeout(() => m.style.display = 'none', err ? 5000 : 1400); }
+const clone = p => p.map(b => b.slice());
+const area = b => Math.max(b[2] - b[0], 0) * Math.max(b[3] - b[1], 0);
+function iouB(a, b) { const w = Math.min(a[2], b[2]) - Math.max(a[0], b[0]), h = Math.min(a[3], b[3]) - Math.max(a[1], b[1]); const i = Math.max(w, 0) * Math.max(h, 0); return i / (area(a) + area(b) - i + 1e-9); }
+const inside = (b, x, y, t) => x >= b[0] - t && x <= b[2] + t && y >= b[1] - t && y <= b[3] + t;
+const matched = c => S.persons.some(p => iouB(p, c) > 0.6);          // a green box that (nearly) is this candidate hides it
+const candsOf = f => (f && Array.isArray(f.cands)) ? f.cands : [];
+const visibleCands = () => (F && S && $('showCands').checked) ? candsOf(F).filter(c => c[4] >= +$('minScore').value && !matched(c)) : [];
+function sameSet(a, b) {                                              // same boxes (one-to-one, IoU > 0.8)?
+  if (a.length !== b.length) return false;
+  const left = b.slice();
+  for (const p of a) { const j = left.findIndex(q => iouB(p, q) > 0.8); if (j < 0) return false; left.splice(j, 1); }
+  return true;
+}
+const kindInfo = k => { const ks = (manifest && manifest.meta && manifest.meta.kinds) || {}; return (ks && typeof ks[k] === 'object' && ks[k]) || {}; };
+
+// ---------- URL state (for scripted screenshots) ----------
+const STATE_KEYS = ['queue', 'fid', 'sel', 'adopt', 'lens', 'unsure', 'note', 'hide', 'filter', 'skip', 'cands', 'minscore', 'theme'];
+function urlState() {
+  const params = new URLSearchParams(location.search);
+  let st = {};
+  const name = params.get('state'), states = manifest.meta.states;
+  if (name && states && typeof states[name] === 'object') st = Object.assign({}, states[name]);
+  for (const k of STATE_KEYS) if (params.has(k)) st[k] = params.get(k);
+  return Object.keys(st).length ? st : null;
+}
+const truthy = v => v === true || v === 1 || v === '1' || v === 'true' || v === 'yes';
+function applyTheme(t) { if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
+async function applyScripted(st) {
+  if (st.fid !== undefined) {
+    const i = view.findIndex(e => e.fid === String(st.fid));
+    if (i >= 0) await show(i, true); else flash('frame ' + st.fid + ' is not in this queue', true);
+  }
+  if (!F || !S) return;
+  if (st.adopt !== undefined) for (const a of String(st.adopt).split(',')) { const c = candsOf(F)[num(a, -1)]; if (c) { S.persons.push(c.slice(0, 4)); S.sel = S.persons.length - 1; S.dirty = true; } }
+  if (st.sel !== undefined) { const s = num(st.sel, -1); S.sel = (s >= 0 && s < S.persons.length) ? s : -1; }
+  if (st.unsure !== undefined) { S.unsure = truthy(st.unsure); S.dirty = true; }
+  if (st.note !== undefined) { S.note = String(st.note); $('note').value = S.note; S.dirty = true; }
+  if (st.hide !== undefined) hide = truthy(st.hide);
+  if (st.lens !== undefined) {
+    const xy = String(st.lens).split(',').map(v => num(v, NaN));
+    if (xy.length === 2 && xy.every(Number.isFinite)) { mouse.ix = xy[0]; mouse.iy = xy[1]; mouse.x = xy[0] * scale; mouse.y = xy[1] * scale; mouse.in = true; lens = true; }
+  }
+  render(); sidebar();
+}
+
+// ---------- loading ----------
+async function init() {
+  manifest = await api('/api/manifest');
+  const meta = manifest.meta || {};
+  scripted = urlState();
+  applyTheme(scripted && scripted.theme ? scripted.theme : pref.get('theme', ''));
+  const title = String(meta.title || 'OpenVeil review');
+  document.title = title; $('title').textContent = title;
+  const banner = meta.demo ? 'DEMO - ' + String(meta.banner || 'synthetic frames') : String(meta.banner || DEFAULT_BANNER);
+  $('banner').textContent = banner; $('banner').className = meta.demo ? 'demo' : '';
+  $('warn').textContent = meta.demo ? String(meta.banner || 'Demo data') + '. Decisions here are for practice only.' : banner + '. This page works only on this computer.';
+  $('warn').className = 'warnbox' + (meta.demo ? ' demo' : '');
+  const st = scripted || {};
+  $('skipDone').checked = st.skip !== undefined ? truthy(st.skip) : pref.get('skipDone', true);
+  $('showCands').checked = st.cands !== undefined ? truthy(st.cands) : pref.get('showCands', true);
+  $('minScore').value = st.minscore !== undefined ? num(st.minscore, 0.10) : pref.get('minScore', 0.10);
+  $('minScoreV').textContent = (+$('minScore').value).toFixed(2);
+  fillQueues(manifest.stats);
+  qid = st.queue !== undefined ? String(st.queue) : pref.get('queue', manifest.queues[0].id);
+  if (!manifest.queues.some(q => q.id === qid)) qid = manifest.queues[0].id;
+  $('queueSel').value = qid;
+  $('filterSel').value = st.filter !== undefined ? String(st.filter) : pref.get('filter', 'all');
+  if (!$('filterSel').value) $('filterSel').value = 'all';
+  await loadQueue();
+  if (scripted) await applyScripted(scripted);
+  document.documentElement.dataset.ready = '1';                       // screenshot scripts wait for this
+}
+function fillQueues(stats) {
+  const sel = $('queueSel'), cur = sel.value;
+  sel.textContent = '';
+  for (const q of manifest.queues) { const s = stats[q.id] || { done: 0 }; sel.appendChild(new Option(`${q.title} (${s.done}/${q.n})`, q.id)); }
+  sel.value = cur || qid;
+  const q = manifest.queues.find(x => x.id === sel.value); sel.title = q ? String(q.desc || q.title) : 'Queue';
+}
+function firstTodo() { const i = view.findIndex(e => !e.status && !e.bad); return i < 0 ? 0 : i; }
+async function loadQueue() {
+  queue = await api('/api/queue/' + encodeURIComponent(qid));
+  hist = [];
+  applyFilter();
+  await show($('skipDone').checked ? firstTodo() : 0);
+}
+function applyFilter() { const f = $('filterSel').value; view = queue.filter(e => f === 'all' || (f === 'prop' ? e.np > 0 : e.np === 0)); }
+function clearFrame(msg) {
+  F = null; S = null; img = null; drag = null;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+  $('pos').textContent = msg; $('meta').textContent = ''; $('reason').textContent = msg; $('persons').textContent = ''; $('cands').textContent = ''; $('state').textContent = ''; $('note').value = '';
+}
+function freshState() {
+  const persons = F.decision ? clone(F.decision.persons) : clone(F.persons);
+  return { persons, initial: clone(F.persons), sel: -1, unsure: F.decision ? F.decision.status === 'unsure' : false, note: F.decision ? F.decision.note : '', undo: [], dirty: false, t0: Date.now() };
+}
+async function show(i, silent) {
+  if (!view.length) { clearFrame('no frames match this filter'); return false; }
+  i = Math.max(0, Math.min(view.length - 1, i));
+  const seq = ++loadSeq, fid = view[i].fid;
+  let f, im;
+  try {
+    f = await api('/api/frame/' + encodeURIComponent(fid));
+    im = new Image(); await new Promise((res, rej) => { im.onload = res; im.onerror = () => rej(new Error('image failed to load')); im.src = '/img/' + encodeURIComponent(fid); });
+  } catch (e) { view[i].bad = true; flash('could not load ' + fid + ': ' + e.message + ' (skipped)', true); return false; }
+  if (seq !== loadSeq) return false;
+  if (S && F && S.dirty) drafts.set(F.id, S);                         // keep the edits of the frame we leave
+  drag = null; lens = false; hide = false;
+  if (!silent && idx !== i && F) hist.push(idx);
+  idx = i; F = f; img = im;
+  S = drafts.get(fid) || freshState(); S.t0 = Date.now();
+  $('note').value = S.note || '';
+  layout(); render(); sidebar();
+  for (let k = 1; k <= 2; k++) if (view[i + k]) { const p = new Image(); p.src = '/img/' + encodeURIComponent(view[i + k].fid); }
+  return true;
+}
+async function go(dir) {
+  if (busy || !view.length) return;
+  busy = true;
+  try {
+    if (dir < 0) {                                                    // back: through the frames we came from, else the previous one
+      const j = hist.length ? hist.pop() : idx - 1;
+      if (j >= 0 && j < view.length) await show(j, true); else flash('first frame of the queue');
+      return;
+    }
+    const skip = $('skipDone').checked;
+    for (let step = 1; step <= view.length; step++) {                 // forward, wrapping around once, skipping reviewed frames
+      const j = idx + step;
+      if (!skip && j >= view.length) { flash('end of the queue'); return; }
+      const k = j % view.length;
+      if (skip && (view[k].status || view[k].bad)) continue;
+      if (await show(k)) return;
+    }
+    flash(skip ? 'all frames in this queue are reviewed' : 'no frame could be loaded');
+  } finally { busy = false; }
+}
+
+// ---------- saving ----------
+async function confirm() {
+  if (!F || busy) return;
+  busy = true;
+  const f = F, s = S, entry = view[idx];
+  s.note = $('note').value;
+  let r;
+  try {
+    r = await api('/api/decision', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Review-Tool': '1' },
+      body: JSON.stringify({ fid: f.id, persons: s.persons, status: s.unsure ? 'unsure' : 'confirmed', note: s.note, ms: Date.now() - s.t0, queue: qid, base: f.decision ? f.decision.ts : null }) });
+  } catch (e) { flash('NOT saved: ' + e.message, true); busy = false; return; }
+  entry.status = r.saved.status; f.decision = r.saved;
+  drafts.delete(f.id); s.dirty = false; s.undo = []; manifest.stats = r.stats; fillQueues(r.stats);
+  flash('saved');
+  busy = false;
+  if (F === f) await go(1);
+}
+
+// ---------- drawing ----------
+function layout() {
+  if (!F) return;
+  const st = $('stage'), W = F.width, H = F.height;
+  scale = Math.max(0.05, Math.min((st.clientWidth - 8) / W, (st.clientHeight - 8) / H));
+  const dpr = window.devicePixelRatio || 1;
+  cv.style.width = Math.round(W * scale) + 'px'; cv.style.height = Math.round(H * scale) + 'px';
+  cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
+  if (lens) { mouse.x = mouse.ix * scale; mouse.y = mouse.iy * scale; }
+}
+function rect(c, b, color, lw, dash) { c.strokeStyle = color; c.lineWidth = lw; c.setLineDash(dash || []); c.strokeRect(b[0], b[1], b[2] - b[0], b[3] - b[1]); }
+function scoreColor(s) { return `hsl(${Math.round(210 - 190 * Math.min(1, s))},90%,60%)`; }
+function render() {
+  if (!F || !img || !S) return;
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  ctx.drawImage(img, 0, 0, F.width, F.height);
+  const px = 1 / scale;
+  if (!hide) {
+    for (const c of visibleCands()) {
+      rect(ctx, c, scoreColor(c[4]), 1.5 * px, [5 * px, 3 * px]);
+      ctx.font = `${12 * px}px system-ui`; ctx.fillStyle = scoreColor(c[4]);
+      ctx.fillText(c[4].toFixed(2), c[0] + 2 * px, Math.max(c[1] + 12 * px, 12 * px));
+    }
+    S.persons.forEach((p, i) => {
+      rect(ctx, p, '#2fd06b', (i === S.sel ? 3.5 : 2.5) * px);
+      if (i === S.sel) for (const h of handles(p)) { ctx.fillStyle = '#fff'; ctx.fillRect(h[0] - 4 * px, h[1] - 4 * px, 8 * px, 8 * px); }
+    });
+    if (drag && drag.mode === 'draw' && drag.moved) rect(ctx, norm(drag.x0, drag.y0, mouse.ix, mouse.iy), '#fff', 1.5 * px, [4 * px, 3 * px]);
+  }
+  if (lens && mouse.in) drawLens(dpr);
+}
+function drawLens(dpr) {
+  const R = 120, zoom = 4;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cx = mouse.x, cy = mouse.y, sw = (2 * R) / (scale * zoom);
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+  ctx.fillStyle = '#000'; ctx.fillRect(cx - R, cy - R, 2 * R, 2 * R);
+  ctx.drawImage(img, mouse.ix - sw / 2, mouse.iy - sw / 2, sw, sw, cx - R, cy - R, 2 * R, 2 * R);
+  const k = scale * zoom, tx = b => [cx + (b[0] - mouse.ix) * k, cy + (b[1] - mouse.iy) * k, cx + (b[2] - mouse.ix) * k, cy + (b[3] - mouse.iy) * k];
+  if (!hide) {
+    for (const c of visibleCands()) rect(ctx, tx(c), scoreColor(c[4]), 1.5, [5, 3]);
+    S.persons.forEach((p, i) => rect(ctx, tx(p), '#2fd06b', i === S.sel ? 3 : 2));
+  }
+  ctx.restore(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([]); ctx.stroke();
+}
+const norm = (x0, y0, x1, y1) => [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)];
+// handles of a selected box; on small boxes only the corners, and the grab zone never takes more than a third of the box
+function grabRadius(p) { return Math.min(9, Math.min(p[2] - p[0], p[3] - p[1]) * scale / 3) / scale; }
+function handles(p) {
+  const [a, b, c, d] = p, mx = (a + c) / 2, my = (b + d) / 2, corners = [[a, b, 'nw'], [c, b, 'ne'], [c, d, 'se'], [a, d, 'sw']];
+  return Math.min(c - a, d - b) * scale >= 24 ? corners.concat([[mx, b, 'n'], [c, my, 'e'], [mx, d, 's'], [a, my, 'w']]) : corners;
+}
+
+// ---------- editing ----------
+const snapshot = () => ({ persons: clone(S.persons), sel: S.sel, unsure: S.unsure });
+function pushUndo(snap) { S.undo.push(snap || snapshot()); if (S.undo.length > 100) S.undo.shift(); S.dirty = true; }
+function undo() { if (!S || busy) return; const u = S.undo.pop(); if (!u) return; S.persons = u.persons; S.sel = u.sel; S.unsure = u.unsure; S.dirty = S.undo.length > 0 || !sameSet(S.persons, S.initial); render(); sidebar(); }
+function clampBox(b) { b[0] = Math.max(0, Math.min(F.width, b[0])); b[2] = Math.max(0, Math.min(F.width, b[2])); b[1] = Math.max(0, Math.min(F.height, b[1])); b[3] = Math.max(0, Math.min(F.height, b[3])); return b; }
+function pick(ix, iy) {
+  const t = 3 / scale;
+  let best = -1, ba = Infinity;
+  S.persons.forEach((p, i) => { if (inside(p, ix, iy, t) && area(p) < ba) { best = i; ba = area(p); } });
+  if (best >= 0) return { type: 'person', i: best };
+  let bc = null; ba = Infinity;
+  for (const c of visibleCands()) if (inside(c, ix, iy, 0) && area(c) < ba) { bc = c; ba = area(c); }
+  return bc ? { type: 'cand', c: bc } : null;
+}
+function setMouse(e) {
+  const r = cv.getBoundingClientRect();
+  mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.ix = mouse.x / scale; mouse.iy = mouse.y / scale; mouse.in = true;
+}
+cv.addEventListener('mousedown', e => {
+  if (!F || !S || busy || e.button !== 0) return;
+  setMouse(e);
+  if (S.sel >= 0 && !e.shiftKey) {                                    // Shift forces drawing, also inside the selected box
+    const p = S.persons[S.sel], t = grabRadius(p);
+    const h = handles(p).find(h => Math.abs(h[0] - mouse.ix) <= t && Math.abs(h[1] - mouse.iy) <= t);
+    if (h) { drag = { mode: 'resize', h: h[2], i: S.sel, gx: mouse.ix - h[0], gy: mouse.iy - h[1], x0: mouse.ix, y0: mouse.iy, snap: snapshot(), moved: false, cx: e.clientX, cy: e.clientY }; return; }
+    if (inside(p, mouse.ix, mouse.iy, 0)) { drag = { mode: 'move', i: S.sel, dx: mouse.ix - p[0], dy: mouse.iy - p[1], w: p[2] - p[0], hgt: p[3] - p[1], x0: mouse.ix, y0: mouse.iy, snap: snapshot(), moved: false, cx: e.clientX, cy: e.clientY }; return; }
+  }
+  drag = { mode: 'draw', x0: mouse.ix, y0: mouse.iy, cx: e.clientX, cy: e.clientY, moved: false };
+});
+window.addEventListener('mousemove', e => {
+  if (!F || !S) return;
+  const r = cv.getBoundingClientRect();
+  if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) setMouse(e); else mouse.in = false;
+  if (drag) {
+    const ix = Math.max(0, Math.min(F.width, (e.clientX - r.left) / scale)), iy = Math.max(0, Math.min(F.height, (e.clientY - r.top) / scale)); mouse.ix = ix; mouse.iy = iy;
+    if (!drag.moved && Math.hypot(e.clientX - drag.cx, e.clientY - drag.cy) > 4) { drag.moved = true; if (drag.snap) pushUndo(drag.snap); }
+    if (drag.moved && drag.mode === 'resize') {
+      const p = S.persons[drag.i], h = drag.h, x = ix - drag.gx, y = iy - drag.gy;
+      if (h.includes('w')) p[0] = x; if (h.includes('e')) p[2] = x; if (h.includes('n')) p[1] = y; if (h.includes('s')) p[3] = y;
+    } else if (drag.moved && drag.mode === 'move') {
+      const p = S.persons[drag.i];                                    // keep the whole box inside the image
+      p[0] = Math.max(0, Math.min(F.width - drag.w, ix - drag.dx)); p[1] = Math.max(0, Math.min(F.height - drag.hgt, iy - drag.dy)); p[2] = p[0] + drag.w; p[3] = p[1] + drag.hgt;
+    }
+  }
+  if (drag || lens) render();
+});
+window.addEventListener('mouseup', e => {
+  if (!drag || !F || !S) { drag = null; return; }
+  const d = drag; drag = null;
+  if (d.mode === 'resize') {
+    if (d.moved) {
+      const p = S.persons[d.i], n = clampBox(norm(p[0], p[1], p[2], p[3]));
+      if (n[2] - n[0] < 4 || n[3] - n[1] < 4) { const u = S.undo.pop(); S.persons = u.persons; S.sel = u.sel; S.dirty = S.undo.length > 0 || !sameSet(S.persons, S.initial); flash('box too small: change reverted', true); }
+      else S.persons[d.i] = n;
+    }
+  } else if (d.mode === 'move') {
+    if (!d.moved) { const pk = pick(d.x0, d.y0); if (!pk || pk.type !== 'person' || pk.i !== d.i) { S.sel = -1; applyClick(d.x0, d.y0, e.shiftKey); } }
+  } else if (d.mode === 'draw') {
+    const b = clampBox(norm(d.x0, d.y0, mouse.ix, mouse.iy)), cssDiag = Math.hypot(b[2] - b[0], b[3] - b[1]) * scale;
+    if (d.moved && b[2] - b[0] >= 5 && b[3] - b[1] >= 5 && cssDiag >= 10) { pushUndo(); S.persons.push(b); S.sel = S.persons.length - 1; }
+    else applyClick(d.x0, d.y0, e.shiftKey);                          // a click, also one with some jitter
+  }
+  render(); sidebar();
+});
+function applyClick(x, y, shift) {
+  const pk = pick(x, y);
+  if (pk && pk.type === 'person') { S.sel = pk.i; return; }
+  if (pk && pk.type === 'cand') {
+    const risky = area(pk.c) > 0.10 * F.width * F.height && pk.c[4] < 0.5;       // big and not confident: adopt deliberately
+    if (S.sel >= 0) { S.sel = -1; return; }                                      // a click while a box is selected only deselects
+    if (risky && !shift) { flash('big low-score candidate: Shift+click to adopt it (or use the list on the right)', true); return; }
+    pushUndo(); S.persons.push(pk.c.slice(0, 4)); S.sel = S.persons.length - 1; return;
+  }
+  S.sel = -1;
+}
+function deleteSel() { if (!S || busy || S.sel < 0) return; pushUndo(); S.persons.splice(S.sel, 1); S.sel = -1; render(); sidebar(); }
+
+// ---------- side panel ----------
+const pct = v => Math.round(100 * num(v, 0)) + '%';
+function chip(text, cls) { return `<span class="chip ${esc(cls || '')}">${esc(text)}</span>`; }
+function sidebar() {
+  if (!F || !S) return;
+  const ki = kindInfo(F.kind), chips = [];
+  for (const k of ['visit', 'video', 'clock']) if (F[k] !== undefined && F[k] !== null && F[k] !== '') chips.push(chip(F[k]));
+  if (typeof F.night === 'boolean') chips.push(chip(F.night ? 'night' : 'day'));
+  if (typeof F.ir === 'boolean') chips.push(chip(F.ir ? 'grey (IR)' : 'colour'));
+  if (F.bucket) chips.push(chip(F.bucket));
+  chips.push(chip(ki.label || F.kind || 'frame', ki.warn ? 'warn' : ''));
+  if (F.source) chips.push(chip('proposal: ' + F.source));
+  if (F.giant && typeof F.giant === 'object') chips.push(chip(`giant rule: drops a box of ${pct(F.giant.share)}`, 'warn'));
+  if (F.decision) chips.push(chip(`saved: ${F.decision.status}, ${F.decision.persons.length} person(s)`, 'ok'));
+  $('meta').innerHTML = chips.join('');
+  const e = view[idx];
+  $('reason').textContent = String((e && e.note) || ki.hint || (manifest.meta && manifest.meta.hint) || DEFAULT_HINT);
+  $('pos').textContent = `${idx + 1} / ${view.length}  ·  ${F.id}`;
+  $('persons').innerHTML = S.persons.length ? S.persons.map((p, i) => `<div class="row ${i === S.sel ? 'sel' : ''}" data-i="${i}"><span>#${i + 1}</span><span class="s">${Math.round(p[2] - p[0])} × ${Math.round(p[3] - p[1])} px</span></div>`).join('') : '<div class="note">nobody</div>';
+  const all = candsOf(F), vc = visibleCands().slice().sort((a, b) => b[4] - a[4]).slice(0, 12);
+  $('cands').innerHTML = vc.length ? vc.map(c => `<div class="row" data-c="${all.indexOf(c)}"><span style="color:${scoreColor(c[4])}">score ${num(c[4], 0).toFixed(2)}</span><span class="s">${Math.round(c[2] - c[0])} × ${Math.round(c[3] - c[1])} px</span></div>`).join('') : '<div class="note">none above the minimum score</div>';
+  $('state').textContent = (S.dirty ? 'edited, not saved yet. ' : '') + (sameSet(S.persons, S.initial) ? 'same as the proposal.' : 'differs from the proposal.') + (S.unsure ? ' Marked unsure.' : '');
+  $('bUnsure').style.borderColor = S.unsure ? 'var(--amber)' : '';
+}
+$('persons').addEventListener('click', e => { const r = e.target.closest('.row'); if (r && S && !busy) { S.sel = +r.dataset.i; render(); sidebar(); } });
+$('cands').addEventListener('click', e => { const r = e.target.closest('.row'); const c = r ? candsOf(F)[+r.dataset.c] : null; if (c && S && !busy) { pushUndo(); S.persons.push(c.slice(0, 4)); S.sel = S.persons.length - 1; render(); sidebar(); } });
+
+// ---------- controls ----------
+const act = fn => () => { if (!S || busy) return; fn(); render(); sidebar(); };
+$('queueSel').addEventListener('change', async e => { if (busy) { e.target.value = qid; return; } qid = e.target.value; pref.set('queue', qid); e.target.blur(); fillQueues(manifest.stats); await loadQueue(); });
+$('filterSel').addEventListener('change', async e => { if (busy) return; pref.set('filter', e.target.value); e.target.blur(); hist = []; applyFilter(); await show($('skipDone').checked ? firstTodo() : 0); });
+$('skipDone').addEventListener('change', e => pref.set('skipDone', e.target.checked));
+$('showCands').addEventListener('change', e => { pref.set('showCands', e.target.checked); if (F) { render(); sidebar(); } });
+$('minScore').addEventListener('input', e => { $('minScoreV').textContent = (+e.target.value).toFixed(2); pref.set('minScore', +e.target.value); if (F) { render(); sidebar(); } });
+$('bConfirm').onclick = confirm; $('bPrev').onclick = () => go(-1); $('bNext').onclick = () => go(1);
+$('bNone').onclick = act(() => { if (S.persons.length) { pushUndo(); S.persons = []; S.sel = -1; } });
+$('bUnsure').onclick = act(() => { pushUndo(); S.unsure = !S.unsure; });
+$('bReset').onclick = act(() => { pushUndo(); S.persons = clone(S.initial); S.sel = -1; });
+$('note').addEventListener('input', () => { if (S) { S.note = $('note').value; S.dirty = true; } });
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type === 'text')) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); undo(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const action = ['enter', ' ', 'n', 'u', 'r', 'x', 'delete', 'backspace', 'c', 'arrowright', 'arrowleft', 'escape'].includes(k);
+  if (action && (e.repeat || busy || !F || !S)) { if (k === ' ' || k === 'enter' || k.startsWith('arrow')) e.preventDefault(); return; }   // a held key must not confirm frames nobody looked at
+  if (k === 'enter' || k === ' ') { e.preventDefault(); if (document.activeElement && document.activeElement.tagName === 'BUTTON') document.activeElement.blur(); confirm(); }
+  else if (k === 'arrowright') { e.preventDefault(); go(1); } else if (k === 'arrowleft') { e.preventDefault(); go(-1); }
+  else if (k === 'n') $('bNone').click(); else if (k === 'u') $('bUnsure').click(); else if (k === 'r') $('bReset').click();
+  else if (k === 'x' || k === 'delete' || k === 'backspace') { e.preventDefault(); deleteSel(); }
+  else if (k === 'escape') { S.sel = -1; render(); sidebar(); }
+  else if (k === 'c') { $('showCands').checked = !$('showCands').checked; $('showCands').dispatchEvent(new Event('change')); }
+  else if ((k === '[' || k === ']') && F) { const m = $('minScore'); m.value = Math.max(0, Math.min(0.9, +m.value + (k === ']' ? 0.02 : -0.02))).toFixed(2); m.dispatchEvent(new Event('input')); }
+  else if (k === 'z' && !lens && S) { lens = true; render(); } else if (k === 'h' && !hide && S) { hide = true; render(); }
+});
+window.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k === 'z' && lens) { lens = false; render(); } if (k === 'h' && hide) { hide = false; render(); } });
+window.addEventListener('blur', () => { if (scripted) return; if (lens || hide) { lens = false; hide = false; render(); } });
+cv.addEventListener('mouseleave', () => { if (scripted && lens) return; mouse.in = false; if (lens) render(); });
+new ResizeObserver(() => { if (F) { layout(); render(); } }).observe($('stage'));
+window.addEventListener('beforeunload', e => { if ((S && S.dirty) || [...drafts.values()].some(d => d.dirty)) { e.preventDefault(); e.returnValue = ''; } });
+init().catch(e => flash('failed to start: ' + e.message, true));
+</script>
+</body>
+</html>

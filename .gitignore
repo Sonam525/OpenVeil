@@ -1,0 +1,135 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Patterns use [xX] character classes so that they also match upper-case
+# extensions when git runs with core.ignorecase=false (the Linux default).
+
+# Outputs: videos, streams and partial downloads (they may show people unmasked)
+*.[mM][pP]4
+*.[mM]4[vV]
+*.[mM][oO][vV]
+*.[mM][kK][vV]
+*.[aA][vV][iI]
+*.[dD][aA][vV]
+*.[hH]264
+*.[hH]265
+*.264
+*.265
+*.[hH][eE][vV][cC]
+*.[tT][sS]
+*.[mM][tT][sS]
+*.[mM]2[tT][sS]
+*.[wW][eE][bB][mM]
+*.[fF][lL][vV]
+*.[pP][aA][rR][tT]
+*.[cC][rR][dD][oO][wW][nN][lL][oO][aA][dD]
+*.[tT][mM][pP]
+
+# Box tables, scores and results: they carry source video names and times.
+# Plain .json is ignored everywhere except under configs/ and docs/.
+*.[jJ][sS][oO][nN]
+*.[jJ][sS][oO][nN][lL]
+*.[jJ][sS][oO][nN].[gG][zZ]
+*.[cC][sS][vV]
+*.[tT][sS][vV]
+*.[pP][aA][rR][qQ][uU][eE][tT]
+*.[fF][eE][aA][tT][hH][eE][rR]
+*.[hH]5
+*.[hH][dD][fF]5
+*.[pP][kK][lL]
+*.[pP][iI][cC][kK][lL][eE]
+*.[nN][pP][yY]
+*.[nN][pP][zZ]
+*.[dD][bB]
+*.[sS][qQ][lL][iI][tT][eE]
+!/configs/**/*.json
+!/docs/**/*.json
+summary.json
+failed/
+workers/
+
+# Images and archives of frames (they may show people unmasked). The only
+# exceptions are listed by name at the end of this section: the synthetic
+# documentation images and the approved masked example stills in docs/img.
+*.[jJ][pP][gG]
+*.[jJ][pP][eE][gG]
+*.[jJ][pP][eE]
+*.[pP][nN][gG]
+*.[wW][eE][bB][pP]
+*.[bB][mM][pP]
+*.[tT][iI][fF]
+*.[tT][iI][fF][fF]
+*.[gG][iI][fF]
+*.[hH][eE][iI][cC]
+*.[hH][eE][iI][fF]
+*.[aA][vV][iI][fF]
+*.[pP][pP][mM]
+*.[pP][gG][mM]
+*.[tT][aA][rR]
+*.[tT][aA][rR].[gG][zZ]
+*.[tT][gG][zZ]
+*.[zZ][iI][pP]
+*.7[zZ]
+*.[rR][aA][rR]
+!/docs/img/mosaic_grid.png
+!/docs/img/review_overview.png
+!/docs/img/review_adopt_candidate.png
+!/docs/img/review_edit_box.png
+!/docs/img/review_magnifier.png
+!/docs/img/review_unsure_note.png
+!/docs/img/example_farmA_1.jpg
+!/docs/img/example_farmA_2.jpg
+!/docs/img/example_farmB_1.jpg
+
+# Review folders hold unmasked frames: never commit them (the package openveil/review/ is code).
+# `openveil review build` also writes a .gitignore that ignores everything into its output folder.
+/review/
+/review_*/
+/*_review/
+/out/
+decisions.jsonl
+human_labels.json
+unsure_frames.json
+review_summary.json
+overrides.json
+reviewed_boxes.json
+
+# Model weights
+/weights/
+*.[sS][aA][fF][eE][tT][eE][nN][sS][oO][rR][sS]
+*.[pP][tT]
+*.[pP][tT][hH]
+*.[bB][iI][nN]
+*.[cC][kK][pP][tT]
+*.[oO][nN][nN][xX]
+*.[gG][gG][uU][fF]
+*.[tT][fF][lL][iI][tT][eE]
+*.[eE][nN][gG][iI][nN][eE]
+
+# Data folders used in the docs' examples
+/videos/
+/tables/
+/tables_*/
+/masked/
+/frames/
+/masked_frames/
+/data/
+
+# Local name maps and secrets
+*.csv.local
+.env
+.env.*
+*.[kK][eE][yY]
+*.[pP][eE][mM]
+*[tT][oO][kK][eE][nN]*.[tT][xX][tT]
+*[tT][oO][kK][eE][nN]*.[jJ][sS][oO][nN]
+*[tT][oO][kK][eE][nN]*.[eE][nN][vV]
+*[tT][oO][kK][eE][nN]
+*[sS][eE][cC][rR][eE][tT]*.[tT][xX][tT]
+.netrc

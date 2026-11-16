@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Haiyu Yang and Miel Hostens
+#
+# The 'production' preset written out in full: every setting with its default value.
+# It is the same as `openveil config show --preset production`; copy it as a starting point,
+# or (simpler) write a file with only the values you change (see example_barn.yaml).
+# Unknown keys are an error. See README.md, "Configuration reference", for what each key does.
+preset: production
+
+schedule:                       # which frames the detector sees
+  chunk_s: 60.0                 # the video is scanned in chunks of this length (s)
+  base_s: 1.0                   # checkpoint interval in full (day) mode
+  dense_s: 0.2                  # detector interval after a hit
+  night_base_s: 5.0             # checkpoint interval in sparse (night) mode; hits never start dense mode
+  clear_gaps: 2                 # checkpoint intervals without a hit before dense mode ends
+  lookahead: 4                  # checkpoints per detector batch
+  last_checkpoint: true         # the last frame of every chunk is a checkpoint
+  max_gap_s: 3.0                # longest gap bridged by interpolation by day (s)
+  night_gap_factor: 2.2         # at night: max(max_gap_s, night_gap_factor * night_base_s)
+  gate_base: 1.0                # interpolate only if the boxes are within
+  gate_per_s: 1.5               #   gate_base + gate_per_s * gap box sizes (or IoU > 0.05)
+  day_night:
+    policy: always_full         # always_full: day schedule everywhere; clock: by the camera clock
+    day_start: 6.0              # day hours for the clock policy
+    day_end: 23.0
+    night_mode: sparse          # sparse, skip (no detection) or full
+    margin_s: 300.0             # a chunk is day if its start, or its end plus this margin, is in the day
+    clock_regex: '(\d{8})[-_](\d{6})'   # recording start in the file name (YYYYMMDD, HHMMSS)
+
+proposer:                       # Grounding DINO: proposes candidate boxes for a text prompt
+  model_id: IDEA-Research/grounding-dino-base
+  prompt: "person."
+  positive_phrases: [person]    # phrases whose score counts
+  competitor_phrases: []        # phrases that only absorb animals or objects
+  shortest_edge: 800
+  longest_edge: 1333
+  fp16: true
+  batch: 4                      # halved on out-of-memory
+  cand_thr: 0.05                # minimum score of a candidate
+  merge_iou: 0.6                # greedy NMS between candidates
+
+verifier:                       # crop classifier that keeps or drops every candidate
+  mode: crop                    # crop, or none (keep candidates by proposer score >= threshold)
+  backbone_id: facebook/dinov3-vitl16-pretrain-lvd1689m
+  # Required for mode crop. The released weights (DINOv3 License): download
+  # Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16 from the Hugging Face Hub, for example to
+  # weights/OpenVeil-Verifier-DINOv3-ViT-L16, and set
+  #   adapter_dir: weights/OpenVeil-Verifier-DINOv3-ViT-L16
+  #   head_path: weights/OpenVeil-Verifier-DINOv3-ViT-L16/head.safetensors
+  adapter_dir: null             # folder with the LoRA adapter (PEFT format), head and meta.json
+  head_path: null               # head.safetensors (or a legacy head.pt); found in adapter_dir when null
+  size: 224                     # crop size after letterboxing (px)
+  pad: 0.1                      # context around the box, share of its size
+  resize_width: 1280            # frames are resized to this width before cropping
+  jpeg_quality: 90              #   and round-tripped through JPEG, as in training
+  threshold: 0.1                # keep a box when p(person) >= threshold
+  batch: 128
+  dtype: bfloat16
+  lora_r: 32
+  lora_alpha: 64
+  head_hidden: [1024, 512]
+
+postprocess:                    # clean-up of the kept boxes of one frame
+  nms: 0.85                     # near duplicates of a better box are removed
+  container: true               # a box that holds several kept boxes is replaced by their union
+  container_min_inner: 2
+  container_ratio: 3.0
+  container_inner_frac: 0.8
+
+apply:                          # from boxes to mosaic
+  min_share: 0.55               # giant rule: a box covering this share of the image ...
+  min_inner: 2                  #   ... with at least this many boxes inside it ...
+  inner_frac: 0.8               #   ... (each this much inside) is dropped
+  keep_kinds: [manual]          # box kinds the giant rule never drops
+  pad: 0.2                      # enlargement per side, share of the box size
+  hold_s: 2.0                   # every box is held this long before and after its frame
+  block_divisor: 36.0           # mosaic cell = max(block_min, round(height / block_divisor))
+  block_min: 16
+  episode_gap_s: 1.0            # giant-rule frames closer than this form one episode
+  override_step_s: 0.5          # reviewer additions: one manual box every step_s seconds
+  override_match_iou: 0.5       # reviewer deletions remove boxes with at least this IoU ...
+  override_delete_window_s: null  # ... within this window around their time (null = hold_s)
+
+video:                          # writing the masked video
+  h264_codec: libx264
+  h264_preset: medium
+  h264_crf: 20
+  hevc_codec: libx265
+  hevc_preset: medium
+  hevc_crf: 24
+  other_codec: mpeg4            # other source codecs: full re-encode at the source bitrate
+  bframes: 0
+  repeat_headers: true
+  scenecut: 0
+  keyint: null                  # null = the median GOP length of the source
+  copy_packet_duration: true
+  verify: fast                  # fast, full or none
+  fallback_full_reencode: true  # re-encode in full when the smart cut fails its check
+
+decode:                         # decoding in a child process with a stall timeout
+  first_frame_timeout_s: 300.0
+  stall_timeout_s: 120.0
+  max_bad_pts: 50
+  threads: 6
+  retry_threads: 2
+
+images:
+  jpeg_quality: 95              # masked JPEGs; untouched images are copied byte for byte
+
+run:                            # detection over many videos
+  device: cuda
+  workers: 1                    # worker processes sharing the device
+  max_attempts: 3               # a video that fails this often is abandoned
+  stall_s: 2400.0               # a silent worker is restarted after this long
+  restart_wait_s: 30.0

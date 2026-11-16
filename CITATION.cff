@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: >-
+  If you use OpenVeil, please cite it as below. An arXiv preprint describing
+  OpenVeil is forthcoming; this file will be updated with its reference when
+  it is available. No DOI has been assigned yet.
+type: software
+title: "OpenVeil: Detect, verify and mosaic people in video datasets before release, with an interactive human review tool"
+abstract: >-
+  OpenVeil helps researchers release video datasets that show people. It
+  proposes person boxes with an open-vocabulary detector, verifies them with a
+  fine-tuned crop classifier, lets a human check the hard cases in a local
+  review tool, and mosaics the people while re-encoding only the parts of each
+  video that contain a mosaic (smart cut).
+authors:
+  - given-names: Haiyu
+    family-names: Yang
+    affiliation: "Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA"
+    orcid: "https://orcid.org/0009-0007-5125-4958"
+  - given-names: Miel
+    family-names: Hostens
+    affiliation: "Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA"
+version: 0.1.0
+date-released: "2026-11-16"
+license: Apache-2.0
+repository-code: "https://github.com/Sonam525/OpenVeil"
+url: "https://github.com/Sonam525/OpenVeil"
+keywords:
+  - privacy
+  - anonymisation
+  - person detection
+  - video datasets
+  - data release
+  - human-in-the-loop review
+  - Grounding DINO
+  - DINOv3

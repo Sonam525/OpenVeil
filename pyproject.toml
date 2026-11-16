@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Haiyu Yang and Miel Hostens
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openveil"
+dynamic = ["version"]
+description = "Detect, verify and mosaic people in video datasets before release, with an interactive human review tool."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Haiyu Yang" }, { name = "Miel Hostens" }]
+keywords = ["privacy", "anonymization", "video", "mosaic", "person detection", "dataset release", "grounding dino", "dinov3"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+# The core (config, box tables, rules, schedule, mask plan, mosaic, review server/export) needs numpy only.
+dependencies = ["numpy>=1.23"]
+
+[project.urls]
+Homepage = "https://github.com/Sonam525/OpenVeil"
+Repository = "https://github.com/Sonam525/OpenVeil"
+Documentation = "https://github.com/Sonam525/OpenVeil/tree/main/docs"
+"Verifier weights" = "https://huggingface.co/Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16"
+
+[project.optional-dependencies]
+# decoding, smart cut, quality checks; scipy gives Hungarian matching for interpolation (greedy fallback without it)
+video = ["av>=12", "scipy>=1.9"]
+# Grounding DINO proposer + DINOv3/LoRA crop verifier
+detect = [
+    "torch>=2.1",
+    # transformers 5 renames the DINOv3 modules, so the released LoRA adapter would not load;
+    # the verifier was trained and checked with transformers 4.57.1 and peft 0.13.2
+    "transformers>=4.56,<5",
+    "peft>=0.11",
+    "accelerate>=0.33",
+    "safetensors>=0.4",
+    "pillow>=9",
+    "av>=12",
+    "scipy>=1.9",
+    "pyyaml>=6",
+]
+# training the crop verifier
+train = ["openveil[detect]", "scikit-learn>=1.2"]
+# masking image folders / tars (OpenCV is used instead of Pillow when it is installed)
+images = ["pillow>=9"]
+# the review tool: the demo needs Pillow; building a review from videos also needs PyAV
+review = ["av>=12", "pillow>=9"]
+# reading YAML config files (JSON config files need nothing)
+yaml = ["pyyaml>=6"]
+# running the test suite (python -m unittest discover -s tests) with every optional test enabled
+dev = ["openveil[video,images,review,yaml]"]
+
+[project.scripts]
+openveil = "openveil.cli:main"
+
+[tool.setuptools]
+# NOTICE carries the attribution that Apache-2.0 section 4(d) requires: ship it in every wheel
+license-files = ["LICENSE", "NOTICE"]
+
+[tool.setuptools.dynamic]
+version = { attr = "openveil.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["openveil*"]
+
+[tool.setuptools.package-data]
+"openveil.review" = ["app.html"]

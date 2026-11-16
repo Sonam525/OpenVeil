@@ -1,0 +1,42 @@
+OpenVeil
+Copyright 2026 Haiyu Yang and Miel Hostens
+
+This product includes software developed by Haiyu Yang and Miel Hostens
+(Department of Animal Science, College of Agriculture and Life Sciences,
+Cornell University) and is licensed under the Apache License, Version 2.0
+(see LICENSE).
+
+Built with DINOv3.
+Meta's published DINOv3 License requires prominently displaying
+"Built with DINOv3" for products built with DINOv3 materials.
+
+The crop-verifier weights (a LoRA adapter and an MLP classification head,
+trained on top of facebook/dinov3-vitl16-pretrain-lvd1689m) are NOT part of
+this repository and are NOT covered by its Apache-2.0 licence. They are
+published separately on the Hugging Face Hub as
+Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16. They are a derivative work of DINOv3
+and are distributed only under the DINOv3 License, a copy of which accompanies
+them. DINOv3 is Copyright (c) Meta Platforms, Inc. and affiliates and is
+licensed under the DINOv3 License. Neither the DINOv3 backbone weights nor a
+merged model are distributed.
+
+This software downloads, at run time and only when the user asks for it,
+third-party models that it does not include:
+ - IDEA-Research/grounding-dino-base (Apache-2.0)
+ - facebook/dinov3-vitl16-pretrain-lvd1689m (DINOv3 License; gated with
+   manual approval by Meta: users must accept Meta's terms before download)
+ - Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16 (DINOv3 License, see above)
+The DINOv3 License requires, among other things, compliance with applicable
+law, including trade-control, privacy and data-protection law; forbids
+reverse engineering the DINO Materials; requires that the licensee is not a
+target of trade controls; and forbids using the DINO Materials, or permitting
+others to use them, for any activities subject to ITAR or for end uses
+prohibited by trade controls, including those related to military or warfare
+purposes, nuclear industries or applications, espionage, or the development or
+use of guns or illegal weapons.
+
+This software calls FFmpeg through PyAV for video decoding and encoding.
+OpenVeil does not include or redistribute FFmpeg, x264 or x265. The PyAV
+wheels that users install from PyPI bundle FFmpeg linked with x264 and x265
+(GPL-2.0-or-later). Treat the bundled binaries as GPL-2.0-or-later when
+redistributing them. See THIRD_PARTY.md.
