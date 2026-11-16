@@ -4,7 +4,7 @@
 # The 'production' preset written out in full: every setting with its default value.
 # It is the same as `openveil config show --preset production`; copy it as a starting point,
 # or (simpler) write a file with only the values you change (see example_barn.yaml).
-# Unknown keys are an error. See README.md, "Configuration reference", for what each key does.
+# Unknown keys are an error. See docs/configuration.md for what each key does.
 preset: production
 
 schedule:                       # which frames the detector sees

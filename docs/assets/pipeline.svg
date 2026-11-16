@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 352" width="1000" height="352" role="img" aria-labelledby="pw-t pw-d">
+<title id="pw-t">OpenVeil pipeline</title>
+<desc id="pw-d">Detection on a GPU: videos, a scan schedule, the Grounding DINO proposer and the DINOv3 crop verifier write one box table per video. Then, without a GPU: a person checks the hard frames in the review tool, the boxes are enlarged, held and mosaicked with a smart cut, and every masked file is checked against its source before release.</desc>
+
+<style>
+  text { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; fill: #24292f; }
+  .t { font-size: 14px; font-weight: 600; }
+  .d { font-size: 12px; fill: #57606a; }
+  .h { font-size: 12px; font-weight: 600; letter-spacing: .04em; fill: #57606a; }
+  .box { fill: #ffffff; stroke: #d0d7de; stroke-width: 1; }
+  .box.key { fill: #e8f3ee; stroke: #2f7d5b; }
+  .box.human { fill: #fff8e8; stroke: #c98500; }
+  .box.out { fill: #e9f1f8; stroke: #2a6f9f; }
+  .band { fill: #f6f8fa; stroke: none; }
+  .edge { stroke: #57606a; stroke-width: 1.5; fill: none; }
+  .edge.dash { stroke-dasharray: 4 3; }
+  .arrow { fill: #57606a; }
+  @media (prefers-color-scheme: dark) {
+    text { fill: #e6edf3; }
+    .d, .h { fill: #9da7b3; }
+    .box { fill: #161b22; stroke: #3d444d; }
+    .box.key { fill: #12261e; stroke: #4aa37c; }
+    .box.human { fill: #2a2110; stroke: #c98500; }
+    .box.out { fill: #10202e; stroke: #4b8fc4; }
+    .band { fill: #11161c; }
+    .edge { stroke: #9da7b3; } .arrow { fill: #9da7b3; }
+  }
+</style>
+<rect class="band" x="4" y="8" width="992" height="164" rx="12"/>
+<rect class="band" x="4" y="180" width="992" height="164" rx="12"/>
+<text class="h" x="20" y="36">DETECT, ON A GPU, ONCE PER VIDEO</text>
+<text class="h" x="146" y="208">REVIEW AND APPLY, NO GPU NEEDED</text>
+<rect class="box " x="20" y="56" width="222" height="104" rx="8"/>
+<text class="t" x="32" y="79">1  Videos</text>
+<text class="d" x="32" y="99">Any number, any length.</text>
+<text class="d" x="32" y="115">Decoded in 60 s chunks</text>
+<rect class="box " x="270" y="56" width="222" height="104" rx="8"/>
+<text class="t" x="282" y="79">2  Scan schedule</text>
+<text class="d" x="282" y="99">A check every 1 s; every 0.2 s</text>
+<text class="d" x="282" y="115">after a hit. 0.0508 calls/frame</text>
+<text class="d" x="282" y="131">(case study, sparse at night)</text>
+<rect class="box " x="520" y="56" width="222" height="104" rx="8"/>
+<text class="t" x="532" y="79">3  Proposer</text>
+<text class="d" x="532" y="99">Grounding DINO, text prompt.</text>
+<text class="d" x="532" y="115">Keeps boxes scoring ≥ 0.05:</text>
+<text class="d" x="532" y="131">recall first</text>
+<rect class="box key" x="770" y="56" width="222" height="104" rx="8"/>
+<text class="t" x="782" y="79">4  Verifier</text>
+<text class="d" x="782" y="99">DINOv3 ViT-L/16 + LoRA crop</text>
+<text class="d" x="782" y="115">classifier. Keeps a box if</text>
+<text class="d" x="782" y="131">p(person) ≥ 0.10</text>
+<rect class="box " x="20" y="228" width="222" height="104" rx="8"/>
+<text class="t" x="32" y="251">5  Box table</text>
+<text class="d" x="32" y="271">Box rules, gap interpolation.</text>
+<text class="d" x="32" y="287">One small .json.gz per video;</text>
+<text class="d" x="32" y="303">rules re-apply without a GPU</text>
+<rect class="box human" x="270" y="228" width="222" height="104" rx="8"/>
+<text class="t" x="282" y="251">6  Review tool</text>
+<text class="d" x="282" y="271">A person checks the hard</text>
+<text class="d" x="282" y="287">frames: 0.6 s median per</text>
+<text class="d" x="282" y="303">frame. Writes overrides</text>
+<rect class="box " x="520" y="228" width="222" height="104" rx="8"/>
+<text class="t" x="532" y="251">7  Mosaic + smart cut</text>
+<text class="d" x="532" y="271">Box +20% per side, held ±2 s.</text>
+<text class="d" x="532" y="287">Only GOPs with a mosaic are</text>
+<text class="d" x="532" y="303">re-encoded: 12.0% of packets</text>
+<rect class="box out" x="770" y="228" width="222" height="104" rx="8"/>
+<text class="t" x="782" y="251">8  Verified release</text>
+<text class="d" x="782" y="271">Each file checked against</text>
+<text class="d" x="782" y="287">its source: all 1,023 masked</text>
+<text class="d" x="782" y="303">videos passed</text>
+<path class="edge" d="M242 108 L262 108"/><polygon class="arrow" points="270,108 262,104 262,112"/>
+<path class="edge" d="M242 280 L262 280"/><polygon class="arrow" points="270,280 262,276 262,284"/>
+<path class="edge" d="M492 108 L512 108"/><polygon class="arrow" points="520,108 512,104 512,112"/>
+<path class="edge" d="M492 280 L512 280"/><polygon class="arrow" points="520,280 512,276 512,284"/>
+<path class="edge" d="M742 108 L762 108"/><polygon class="arrow" points="770,108 762,104 762,112"/>
+<path class="edge" d="M742 280 L762 280"/><polygon class="arrow" points="770,280 762,276 762,284"/>
+<path class="edge" d="M881 160 L881 176 L131 176 L131 220"/><polygon class="arrow" points="131,228 127,220 135,220"/>
+</svg>

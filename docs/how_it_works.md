@@ -275,7 +275,7 @@ re-encoding); everything outside those GOPs is bit-exact.
 ## 12. Image folders and tar shards
 
 `openveil apply images` masks still images (JPEG/PNG) in a folder or a tar file
-with the boxes of a boxes JSON per image (the format is in the README; the same
+with the boxes of a boxes JSON per image (the format is in [usage.md](usage.md#mask-still-images); the same
 reader as `openveil review build --images`). Boxes are in pixels of the upright
 image (after the EXIF orientation); a box outside the image is an error. With
 the Python API (`openveil.apply.images.load_image_map` and `boxes_from_map`)

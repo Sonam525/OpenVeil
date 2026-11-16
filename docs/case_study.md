@@ -9,6 +9,44 @@ openly once those people were masked.
 Farms and recordings are given pseudonyms here: **Farm A** and **Farm B**, with
 four recordings `FarmA_R1`, `FarmA_R2`, `FarmA_R3` and `FarmB_R1`.
 
+## Results at a glance
+
+The headline numbers of the case study, a calf play-behaviour dataset of 1,173 videos (about
+50.8 million frames) from two farms. The sections below give the details.
+
+| Measure | Result | Evaluation set |
+|---|---|---|
+| People covered (≥ 90% of their area under a mosaic) | **172 / 172** | 731 everyday frames checked by a human (HUM731; 52 frames with people) |
+| Frames with a false mosaic box | **3.3%** (0.4% with a big one, ≥ 15% of the image) | HUM731, weighted to 2,000 sampled everyday frames |
+| Recall on hard validation frames | **0.862** (loose matching¹) | 261 validation frames enriched with partial and missed people (VAL261), full pipeline with the production schedule; scored by the released model² |
+| False mosaic area | **0.22%** of frame area | VAL261 schedule replay² |
+| Detector calls | **0.0508 per frame** | whole dataset, `clock` day/night policy (sparse at night) |
+| Frames carrying a mosaic in the release | **6.8%** of all video frames (7.7% of the frames of the 1,023 masked videos), 11.7% of JPEG frames | whole dataset (50.8 M video frames; all 1,106,110 JPEGs) |
+| Video packets re-encoded | **12.0%**; all others copied bit-exact | 1,023 masked videos |
+| Masked files passing the automatic check | **all** | 1,023 videos, 270 frame shards |
+| Human review speed | **0.6 s** median per frame; 3,194 frames in about 2.4 h | all review queues |
+
+¹ Loose matching: a person counts as found if any mosaic box matches (IoU ≥ 0.5,
+IoU being the overlap of two boxes from 0 to 1) a box drawn on any part of
+them, so a box on a hand counts. It is lenient; see
+[design_rationale.md](design_rationale.md#2-how-we-measured).
+² Scored by the released model, whose training data include other minutes of
+most of the same source videos (no overlapping frames): not a held-out
+estimate. HUM731 is scored by a model trained without its videos.
+
+Compared with the alternatives we tried, the final cascade was the only option
+that combined full coverage of people in everyday frames with a low false-mosaic
+rate (see [design_rationale.md](design_rationale.md#summary)).
+
+The outcomes in numbers:
+
+| Case | Outcome |
+|---|---|
+| Workers in everyday frames (HUM731) | all 172 people in the 52 frames with people covered by the mosaic |
+| Legs and boots behind a pen wall, people at the image edge | the hardest cases (see [limitations.md](limitations.md)); VAL261 is enriched with them, and 14% of its people are not found under loose matching |
+| Calves and objects mistaken for people | false mosaics on animals and objects: 3.3% of everyday frames keep one, 0.4% a big one (≥ 15% of the image) |
+| Infrared night frames | detected with the same models; recall with people at night was not measured |
+
 ## The data
 
 | | Value |
@@ -119,8 +157,8 @@ approval; only already-masked frames are shown, never an unmasked person (see
 | Farm A, a frame of the released dataset after masking | Farm A, a second frame of the released dataset after masking | Farm B, a frame of the released dataset after masking |
 
 A drawn, synthetic illustration of the mosaic (no footage) is in
-[img/mosaic_grid.png](img/mosaic_grid.png); the README lists example outcomes
-of the case study in a table.
+[img/mosaic_grid.png](img/mosaic_grid.png); the outcomes table is in
+[Results at a glance](#results-at-a-glance) above.
 
 More frames from the other two Farm A recordings and hard cases: small or
 partly visible people that the pipeline still found and masked. In each of

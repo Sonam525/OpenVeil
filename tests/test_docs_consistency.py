@@ -8,11 +8,14 @@ These tests read only the repository's own text files. They check that
   (e-mail addresses, absolute local paths, internal storage paths and, when a
   private word list is supplied through ``OPENVEIL_SCRUB_WORDS``, names of data
   sources);
-* every ``openveil ...`` command shown in the docs follows the CLI contract;
-* relative links and image references resolve, or the image is listed as planned
-  in ``docs/img/README.md``;
-* the configuration reference in the README names real config keys and, where
-  the value is a plain number, matches the ``production`` preset;
+* every ``openveil ...`` command shown in the docs and on the project page
+  follows the CLI contract, and the README with ``docs/usage.md`` shows them all;
+* relative links and image references (Markdown and HTML) resolve, or the image
+  is listed as planned in ``docs/img/README.md``, and in-page anchors exist;
+* the configuration reference (``docs/configuration.md``) names real config keys
+  and, where the value is a plain number, matches the ``production`` preset;
+* the drawn figures are up to date with ``figures/make_figures.py``, accessible,
+  copied unchanged to ``docs/assets/`` and not ignored by git;
 * LICENSE is the full Apache-2.0 text and CITATION.cff is well formed.
 """
 from __future__ import annotations
@@ -25,6 +28,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 DOC_FILES = [
     "README.md",
+    "docs/usage.md",
+    "docs/configuration.md",
+    "docs/limitations.md",
     "docs/how_it_works.md",
     "docs/design_rationale.md",
     "docs/review_tool.md",
@@ -34,6 +40,11 @@ DOC_FILES = [
     "THIRD_PARTY.md",
 ]
 OTHER_FILES = ["LICENSE", "NOTICE", "CITATION.cff"]
+# The GitHub Pages project page (served from docs/) and the drawn figures.
+PAGE_FILES = ["docs/index.html", "docs/style.css", "docs/site.js"]
+FIGURES = ["banner.svg", "pipeline.svg", "pipeline_narrow.svg"]
+FIGURE_FILES = [f"figures/{n}" for n in FIGURES] + [f"docs/assets/{n}" for n in FIGURES]
+CONFIG_REFERENCE = "docs/configuration.md"
 
 # Private data-source and account names are not stored in the repository, not even as
 # hashes (short words are easy to reverse). Before a release, point OPENVEIL_SCRUB_WORDS
@@ -127,7 +138,7 @@ class TestNothingPrivate(unittest.TestCase):
         email = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
         drive_path = re.compile(r"(?<![\w])[A-Za-z]:[\\/]")
         internal = re.compile(r"/(?:d" r"bfs|mnt|Workspace|local_" r"disk0)/", re.IGNORECASE)
-        for rel in DOC_FILES + OTHER_FILES:
+        for rel in DOC_FILES + OTHER_FILES + PAGE_FILES + FIGURE_FILES + ["figures/make_figures.py"]:
             text = _read(rel)
             with self.subTest(file=rel):
                 self.assertIsNone(email.search(text), f"e-mail address in {rel}")
@@ -141,7 +152,9 @@ class TestNothingPrivate(unittest.TestCase):
         for root, dirs, files in os.walk(ROOT):
             dirs[:] = [d for d in dirs if d not in (".git", "__pycache__") and not d.endswith(".egg-info")]
             for name in files:
-                if not name.endswith((".py", ".md", ".html", ".yaml", ".toml", ".cff", ".txt", ".json"))                         and name not in ("LICENSE", "NOTICE", ".gitignore"):
+                scanned = name.endswith((".py", ".md", ".html", ".yaml", ".toml", ".cff", ".txt", ".json",
+                                         ".svg", ".css", ".js"))
+                if not scanned and name not in ("LICENSE", "NOTICE", ".gitignore"):
                     continue
                 full = os.path.join(root, name)
                 with open(full, "r", encoding="utf-8", errors="replace") as f:
@@ -150,59 +163,137 @@ class TestNothingPrivate(unittest.TestCase):
                     self.assertEqual(sorted(words & private), [], "private name found")
 
     def test_only_public_recording_pseudonyms(self):
-        for rel in DOC_FILES:
+        for rel in DOC_FILES + PAGE_FILES + FIGURE_FILES:
             for name in re.findall(r"Farm[A-Z]_R\d+", _read(rel)):
                 with self.subTest(file=rel, name=name):
                     self.assertIn(name, {"FarmA_R1", "FarmA_R2", "FarmA_R3", "FarmB_R1"})
 
 
+def _html_code_lines(text: str):
+    """Lines inside <pre><code> blocks of an HTML page, with entities decoded and backslash
+    continuations joined."""
+    import html
+    for block in re.findall(r"<pre><code>(.*?)</code></pre>", text, flags=re.DOTALL):
+        buf = ""
+        for line in html.unescape(re.sub(r"<[^>]+>", "", block)).splitlines():
+            if line.rstrip().endswith("\\"):
+                buf += line.rstrip()[:-1] + " "
+                continue
+            yield buf + line
+            buf = ""
+
+
+def _command_key(words):
+    return tuple(words[:2]) if tuple(words[:2]) in CLI else tuple(words[:1])
+
+
+def _commands(lines):
+    """(line, command key, options) for every ``openveil ...`` line."""
+    for line in lines:
+        line = line.split("#", 1)[0].strip()
+        if not line.startswith("openveil "):
+            continue
+        words = line.split()[1:]
+        yield line, _command_key(words), {w for w in words if w.startswith("--")}
+
+
+# The commands the README's quick start must show; docs/usage.md shows the rest.
+README_COMMANDS = {("detect",), ("review", "build"), ("review", "serve"), ("review", "demo"),
+                   ("review", "export"), ("apply", "video"), ("verify",)}
+
+
 class TestCliExamples(unittest.TestCase):
     def test_commands_follow_contract(self):
-        seen = set()
-        for rel in DOC_FILES:
-            for line in _code_lines(_read(rel)):
-                line = line.split("#", 1)[0].strip()
-                if not line.startswith("openveil "):
-                    continue
-                words = line.split()[1:]
-                key = tuple(words[:2]) if tuple(words[:2]) in CLI else tuple(words[:1])
+        sources = [(rel, _code_lines(_read(rel))) for rel in DOC_FILES]
+        sources.append(("docs/index.html", _html_code_lines(_read("docs/index.html"))))
+        for rel, lines in sources:
+            for line, key, opts in _commands(lines):
                 with self.subTest(file=rel, line=line):
                     self.assertIn(key, CLI, f"unknown command: {line}")
-                    opts = {w for w in words if w.startswith("--")}
                     self.assertTrue(opts <= CLI[key], f"options {sorted(opts - CLI[key])} not in contract")
-                    seen.add(key)
-        # The README quickstart must show every command of the contract at least once.
-        readme_keys = set()
-        for line in _code_lines(_read("README.md")):
-            words = line.split("#", 1)[0].split()
-            if words[:1] == ["openveil"]:
-                k = tuple(words[1:3]) if tuple(words[1:3]) in CLI else tuple(words[1:2])
-                readme_keys.add(k)
-        self.assertEqual(set(CLI) - readme_keys, set(), "README misses some commands")
+
+    def test_every_command_is_shown(self):
+        readme = {key for _l, key, _o in _commands(_code_lines(_read("README.md")))}
+        usage = {key for _l, key, _o in _commands(_code_lines(_read("docs/usage.md")))}
+        page = {key for _l, key, _o in _commands(_html_code_lines(_read("docs/index.html")))}
+        self.assertEqual(README_COMMANDS - readme, set(), "README quick start misses some commands")
+        self.assertEqual(set(CLI) - (readme | usage), set(), "README and docs/usage.md miss some commands")
+        self.assertEqual(README_COMMANDS - page, set(), "project page misses some commands")
+
+
+def _html_ids(text: str) -> set:
+    return set(re.findall(r'\sid="([^"]+)"', text))
 
 
 class TestLinksAndImages(unittest.TestCase):
+    def _check_target(self, rel, target, planned, html_ids=None):
+        if re.match(r"^[a-z]+:", target) or target.startswith("//"):
+            return
+        path, _, anchor = target.partition("#")
+        path = path.split("?", 1)[0]
+        base = os.path.dirname(os.path.join(ROOT, rel))
+        with self.subTest(file=rel, target=target):
+            full = os.path.normpath(os.path.join(base, path)) if path else os.path.join(ROOT, rel)
+            is_image = path.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"))
+            if is_image and not os.path.exists(full):
+                self.assertIn(os.path.basename(path), planned, f"image {path} neither present nor planned")
+                return
+            self.assertTrue(os.path.exists(full), f"broken link {target}")
+            if not anchor:
+                return
+            if full.endswith(".md"):
+                with open(full, "r", encoding="utf-8") as f:
+                    self.assertIn(anchor, _anchors(f.read()), f"missing anchor #{anchor}")
+            elif html_ids is not None and not path:
+                self.assertIn(anchor, html_ids, f"missing id #{anchor}")
+
     def test_relative_links_resolve(self):
         link = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)\)")
+        html_attr = re.compile(r'\s(?:src|href|srcset)="([^"]+)"')
         planned = _read(PLANNED_IMAGES_README)
         for rel in DOC_FILES:
             text = re.sub(r"```.*?```", "", _read(rel), flags=re.DOTALL)   # code blocks
             text = re.sub(r"`[^`\n]*`", "", text)                            # inline code
-            base = os.path.dirname(os.path.join(ROOT, rel))
-            for target in link.findall(text):
-                if re.match(r"^[a-z]+:", target):
-                    continue
-                path, _, anchor = target.partition("#")
-                with self.subTest(file=rel, target=target):
-                    full = os.path.normpath(os.path.join(base, path)) if path else os.path.join(ROOT, rel)
-                    is_image = path.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp"))
-                    if is_image and not os.path.exists(full):
-                        self.assertIn(os.path.basename(path), planned, f"image {path} neither present nor planned")
-                        continue
-                    self.assertTrue(os.path.exists(full), f"broken link {target}")
-                    if anchor and full.endswith(".md"):
-                        with open(full, "r", encoding="utf-8") as f:
-                            self.assertIn(anchor, _anchors(f.read()), f"missing anchor #{anchor}")
+            for target in link.findall(text) + html_attr.findall(text):
+                self._check_target(rel, target, planned)
+        # In the README, the HTML anchor nav must point at real headings.
+        readme = _read("README.md")
+        for anchor in re.findall(r'href="#([^"]+)"', readme):
+            with self.subTest(readme_anchor=anchor):
+                self.assertIn(anchor, _anchors(readme))
+
+    def test_project_page_links_resolve(self):
+        planned = _read(PLANNED_IMAGES_README)
+        text = _read("docs/index.html")
+        ids = _html_ids(text)
+        targets = re.findall(r'\s(?:src|href|srcset)="([^"]+)"', text)
+        self.assertGreater(len(targets), 20)
+        for target in targets:
+            self._check_target("docs/index.html", target, planned, html_ids=ids)
+            with self.subTest(target=target):
+                # GitHub Pages serves docs/ as the site root: nothing may point outside it
+                self.assertFalse(target.startswith(("../", "/")), "link leaves the docs/ site root")
+                self.assertFalse(target.startswith("http:"), "insecure link")
+
+    def test_project_page_is_self_contained(self):
+        text = _read("docs/index.html")
+        self.assertEqual(re.findall(r'<script[^>]*\ssrc="([^"]+)"', text), ["site.js"])
+        self.assertEqual(re.findall(r'<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"', text), ["style.css"])
+        self.assertIn('name="viewport"', text)
+        self.assertIn("prefers-color-scheme: dark", _read("docs/style.css"))
+        self.assertTrue(os.path.isfile(os.path.join(ROOT, "docs", ".nojekyll")))
+        # every approved still is shown on the page and in the README, and is listed in docs/img/README.md
+        stills = sorted(n for n in os.listdir(os.path.join(ROOT, "docs", "img")) if n.endswith(".jpg"))
+        self.assertEqual(len(stills), 8)
+        for name in stills:
+            with self.subTest(still=name):
+                self.assertIn(f'src="img/{name}"', text)
+                self.assertIn(f"docs/img/{name}", _read("README.md"))
+                self.assertIn(name, _read(PLANNED_IMAGES_README))
+        # every image on the page has alt text
+        for tag in re.findall(r"<img\b[^>]*>", text):
+            with self.subTest(img=tag[:60]):
+                self.assertRegex(tag, r'\salt="')
 
     def test_review_screenshots_are_referenced(self):
         tutorial = _read("docs/review_tool.md")
@@ -213,13 +304,48 @@ class TestLinksAndImages(unittest.TestCase):
                 self.assertIn(name, _read(PLANNED_IMAGES_README))
 
     def test_mermaid_diagrams(self):
-        for rel in ("README.md", "docs/how_it_works.md"):
+        self.assertIn("```mermaid\nflowchart", _read("docs/how_it_works.md"))
+
+
+class TestFigures(unittest.TestCase):
+    """The drawn SVG figures: up to date, accessible, copied for the project page."""
+
+    def test_figures_are_up_to_date(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("make_figures", os.path.join(ROOT, "figures", "make_figures.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        made = {"banner.svg": mod.banner(), "pipeline.svg": mod.pipeline(), "pipeline_narrow.svg": mod.pipeline_narrow()}
+        self.assertEqual(sorted(made), sorted(FIGURES))
+        for name, svg in made.items():
+            for rel in (f"figures/{name}", f"docs/assets/{name}"):
+                with self.subTest(file=rel):
+                    self.assertEqual(_read(rel).rstrip("\n"), svg, "run python figures/make_figures.py")
+
+    def test_figures_are_accessible(self):
+        for rel in FIGURE_FILES:
+            text = _read(rel)
             with self.subTest(file=rel):
-                self.assertIn("```mermaid\nflowchart", _read(rel))
+                self.assertTrue(text.startswith("<svg "))
+                self.assertIn('role="img"', text)
+                self.assertRegex(text, r"<title[^>]*>[^<]{5,}</title>")
+                self.assertRegex(text, r"<desc[^>]*>[^<]{20,}</desc>")
+                self.assertNotRegex(text, r"<(?:image|script|foreignObject)\b")   # drawn only, nothing embedded
+
+    def test_figures_are_not_ignored_by_git(self):
+        import shutil
+        import subprocess
+
+        if not os.path.isdir(os.path.join(ROOT, ".git")) or not shutil.which("git"):
+            self.skipTest("not a git checkout")
+        paths = FIGURE_FILES + PAGE_FILES + ["docs/.nojekyll", "figures/make_figures.py"]
+        r = subprocess.run(["git", "check-ignore", "--no-index", *paths], cwd=ROOT, capture_output=True, text=True)
+        self.assertEqual(r.stdout.strip(), "", "ignored by .gitignore")
 
 
 class TestConfigReference(unittest.TestCase):
-    """The README's configuration tables against openveil.config (skipped if not importable)."""
+    """The configuration tables of docs/configuration.md against openveil.config (skipped if not importable)."""
 
     @classmethod
     def setUpClass(cls):
@@ -233,8 +359,7 @@ class TestConfigReference(unittest.TestCase):
 
     def _rows(self):
         """(section, [dotted keys], value cell) for every row of the configuration tables."""
-        text = _read("README.md")
-        part = text.split("## Configuration reference", 1)[1].split("\n## ", 1)[0]
+        part = _read(CONFIG_REFERENCE).split("\n## ", 1)[0]
         section = None
         for line in part.splitlines():
             m = re.match(r"^\*\*.*?\*\*\s*\(`(\w+)`\)", line)

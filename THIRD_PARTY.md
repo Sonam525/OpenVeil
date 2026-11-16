@@ -1,8 +1,9 @@
 # Third-party components
 
 OpenVeil's own code is licensed under Apache-2.0 (see `LICENSE`). It ships only
-Python source, an HTML page and documentation (including three masked example
-frames of the case-study dataset, shown with the data owner's approval). It does
+Python source, an HTML review page, a static project page, drawn SVG figures
+and documentation (including eight masked example frames of the case-study
+dataset, shown with the data owner's approval). It does
 **not** include or redistribute any third-party binary, model weight or dataset.
 The components below are installed by the user (`pip`) or downloaded by model
 id, and each stays under its own licence. The OpenVeil verifier weights are

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenVeil: share your video dataset, not the people in it</title>
+<meta name="description" content="OpenVeil detects, verifies and mosaics people in video datasets before release, with an interactive human review tool.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="OpenVeil: share your video dataset, not the people in it">
+<meta property="og:description" content="Detect, verify and mosaic people in video datasets before release, with an interactive human review tool.">
+<meta property="og:image" content="https://sonam525.github.io/OpenVeil/img/review_overview.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='9' height='9' rx='2' fill='%231f6b4f'/%3E%3Crect x='12' y='2' width='9' height='9' rx='2' fill='%232a6f7f'/%3E%3Crect x='22' y='2' width='8' height='9' rx='2' fill='%2316324a'/%3E%3Crect x='2' y='12' width='9' height='9' rx='2' fill='%232a6f7f'/%3E%3Crect x='12' y='12' width='9' height='9' rx='2' fill='%2316324a'/%3E%3Crect x='22' y='12' width='8' height='9' rx='2' fill='%231f6b4f'/%3E%3Crect x='2' y='22' width='9' height='8' rx='2' fill='%2316324a'/%3E%3Crect x='12' y='22' width='9' height='8' rx='2' fill='%231f6b4f'/%3E%3Crect x='22' y='22' width='8' height='8' rx='2' fill='%232a6f7f'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#overview">OpenVeil</a>
+  <nav aria-label="Sections">
+    <a href="#pipeline">How it works</a>
+    <a href="#results">Results</a>
+    <a href="#examples">Examples</a>
+    <a href="#review">Review tool</a>
+    <a href="#start">Get started</a>
+    <a href="#weights">Weights</a>
+    <a href="#licences">Licences</a>
+    <a href="#cite">Citation</a>
+  </nav>
+</header>
+
+<main>
+
+<figure class="banner">
+  <img src="assets/banner.svg" width="1280" height="420" alt="A drawn calf barn watched by a camera. Three people, one far away in the doorway, one behind a pen wall and one carrying a bucket, are each covered by a pixel mosaic, while the calves stay visible. A dashed box on one calf marks a candidate the verifier rejected.">
+</figure>
+
+<section id="overview" class="hero">
+  <div class="hero-text">
+    <p class="eyebrow">OpenVeil 0.1.0 · arXiv preprint forthcoming</p>
+    <h1>Share your video dataset, not the people in it</h1>
+    <p class="sub"><strong>OpenVeil</strong>: detect, verify and mosaic people in video datasets before release, with an interactive human review tool.</p>
+    <p class="lead">Footage of animals, farms, labs or streets often shows staff, visitors or bystanders who could be recognised, and that blocks open release. OpenVeil errs on the side of finding every person, lets a human check the hard frames, and mosaics them while touching as little of the footage as possible.</p>
+    <p class="links">
+      <a class="button" href="https://github.com/Sonam525/OpenVeil">Code</a>
+      <a class="button ghost" href="https://huggingface.co/Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16">Weights</a>
+      <a class="button ghost" href="https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset">Case-study dataset</a>
+      <a class="button ghost" href="https://github.com/Sonam525/OpenVeil/blob/main/docs/review_tool.md">Review tutorial</a>
+    </p>
+  </div>
+  <figure class="hero-fig">
+    <a href="img/example_farmA_r2_small_annotated.jpg" data-zoom><img src="img/example_farmA_r2_small_annotated.jpg" width="1280" height="720" alt="A frame of the released, masked calf dataset (FarmA_R2). A small, partly visible person is covered by a mosaic; an outline marks the mosaic and an inset enlarges it three times."></a>
+    <figcaption>A frame of the released, masked case-study dataset (FarmA_R2), shown with the data owner's approval. A partly visible person only 40 x 29 px (0.13 % of the frame) was found and masked. The outline marks the mosaic; the inset enlarges it 3x.</figcaption>
+  </figure>
+</section>
+
+<section class="tiles" aria-label="Headline results">
+  <div class="tile"><b>172 / 172</b><span>people covered in 731 human-checked everyday frames</span></div>
+  <div class="tile"><b>3.3 %</b><span>of everyday frames keep a false mosaic box</span></div>
+  <div class="tile"><b>0.0508</b><span>detector calls per frame over 50.8 million frames, with a sparse night scan</span></div>
+  <div class="tile"><b>12.0 %</b><span>of video packets re-encoded; the rest copied bit for bit</span></div>
+</section>
+
+<section id="problem">
+  <h2>Why</h2>
+  <p>Researchers want to share their video datasets: animal behaviour, agriculture, wildlife, laboratory work, traffic. Three things stand in the way.</p>
+  <ul class="plain">
+    <li><strong>People appear in the footage.</strong> Staff, visitors and bystanders with recognisable faces and bodies block open release: privacy law, consent, institutional rules.</li>
+    <li><strong>Masking by hand does not scale.</strong> Thousands of hours of video cannot be checked frame by frame.</li>
+    <li><strong>Off-the-shelf detectors fail both ways.</strong> They miss people in odd poses, or put mosaics all over the animals you want to study.</li>
+  </ul>
+  <p>OpenVeil was built to release a calf play-behaviour dataset of 1,173 videos, about 50.8 million frames, from two farms.</p>
+</section>
+
+<section id="pipeline">
+  <h2>How it works</h2>
+  <picture class="wide">
+    <source media="(max-width: 640px)" srcset="assets/pipeline_narrow.svg">
+    <img src="assets/pipeline.svg" width="1000" height="352" alt="Pipeline. On a GPU: videos, a scan schedule, the Grounding DINO proposer and the DINOv3 crop verifier write one box table per video. Without a GPU: the review tool, mosaic with smart cut, and a verified release.">
+  </picture>
+  <div class="columns">
+    <div>
+      <h3>Detect, on a GPU</h3>
+      <p>A checkpoint runs every second; after a hit the detector runs every 0.2 s until the scene is clear for 2 s. Grounding DINO proposes boxes at a low threshold (score ≥ 0.05), and a DINOv3 ViT-L/16 crop classifier with a LoRA adapter keeps those that show a person (p ≥ 0.10). Each video gets one small box table.</p>
+    </div>
+    <div>
+      <h3>Review, on any laptop</h3>
+      <p>The review tool shows the frames most likely to be wrong: the largest mosaics, giant-rule episodes and a random sample. A reviewer fixes boxes with the mouse and keyboard, and the corrections are exported as an overrides file. Every rule after detection can be re-applied without a GPU.</p>
+    </div>
+    <div>
+      <h3>Apply, on a CPU</h3>
+      <p>Each box is enlarged by 20 % per side and held for ±2 s, and grid cells that touch it take their mean colour. Only the groups of pictures (GOPs) that contain a mosaic are re-encoded; every other packet is copied bit for bit. Every output is checked against its source.</p>
+    </div>
+  </div>
+  <figure class="wide mosaic">
+    <img src="img/mosaic_grid.png" width="1296" height="360" alt="A drawn, synthetic frame before and after masking: the detector box, the box enlarged by 20 % per side, and the grid cells inside it filled with their mean colour.">
+    <figcaption>What the mosaic looks like, on a drawn, synthetic frame (no footage). Left: the detector box (green). Right: the box enlarged by 20 % per side (blue), and every pixel inside it set to the mean of its grid cell. The cell is 1/36 of the image height, at least 16 px.</figcaption>
+  </figure>
+  <p class="note">Every stage in detail: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/how_it_works.md">how it works</a>. What we tried and why: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/design_rationale.md">design rationale</a>.</p>
+</section>
+
+<section id="results">
+  <h2>Results</h2>
+  <p>From the case study: 1,173 videos of calf barns on two farms, colour by day and infrared at night. HUM731 is 731 everyday frames checked by a human (52 with people), weighted back to 2,000 sampled frames. VAL261 is 261 validation frames enriched with partial and missed people.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Measure</th><th class="n">Result</th><th>Evaluation set</th></tr></thead>
+    <tbody>
+      <tr class="strong"><td>People covered (≥ 90 % of their area under a mosaic)</td><td class="n">172 / 172</td><td>HUM731</td></tr>
+      <tr class="strong"><td>Frames with a false mosaic box</td><td class="n">3.3 %</td><td>HUM731 (0.4 % with a big one, ≥ 15 % of the image)</td></tr>
+      <tr><td>Recall on hard validation frames, loose matching</td><td class="n">0.862</td><td>VAL261, full pipeline, production schedule</td></tr>
+      <tr><td>False mosaic area</td><td class="n">0.22 %</td><td>VAL261, schedule replay</td></tr>
+      <tr><td>Detector calls per frame</td><td class="n">0.0508</td><td>Whole dataset, <code>clock</code> day/night policy</td></tr>
+      <tr><td>Video frames carrying a mosaic</td><td class="n">6.8 %</td><td>Whole release (11.7 % of the 1,106,110 JPEG frames)</td></tr>
+      <tr><td>Video packets re-encoded</td><td class="n">12.0 %</td><td>1,023 masked videos; all others bit-exact</td></tr>
+      <tr><td>Masked files passing the automatic check</td><td class="n">all</td><td>1,023 videos, 270 frame shards</td></tr>
+      <tr><td>Human review, median per frame</td><td class="n">0.6 s</td><td>3,194 frames in about 2.4 h</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Loose matching counts a person as found if any mosaic box matches (IoU ≥ 0.5) a box drawn on any part of them. VAL261 is scored by the released model, whose training data include other minutes of most of the same videos, so it is not a held-out estimate; HUM731 is scored by a model trained without its videos.</p>
+
+  <h3>Why a cascade</h3>
+  <p>Open-vocabulary detectors find people in odd poses but cannot tell a crouching worker from a calf; detectors trained on the target data are precise but miss people. A proposer plus a strong crop classifier keeps the recall of one and most of the precision of the other.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Approach</th><th>Recall</th><th>False mosaics</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>YOLO11x + OWLv2 + tracking (pilot)</td><td>44 / 53 person events fully masked</td><td>67 % of masked area on animals or objects</td><td>Rejected</td></tr>
+      <tr><td>Pilot + fixed privacy zones</td><td>53 / 53 events</td><td>Masks on 32.4 % of all frame area</td><td>Rejected</td></tr>
+      <tr><td>Grounding DINO alone</td><td>VAL261: 0.876 (loose)</td><td>1.68 % of the area of person-free frames; in a separate evaluation 59.2 % of person-free frames got a mosaic</td><td>Kept as proposer</td></tr>
+      <tr><td>LocateAnything-3B</td><td>VAL261: 0.772</td><td>49.3 % of person-free frames; 1.99 s per frame</td><td>Rejected</td></tr>
+      <tr><td>YOLO11l fine-tuned in-domain</td><td>VAL261: 0.634</td><td>4.9 % of person-free frames</td><td>Rejected (recall)</td></tr>
+      <tr><td>Grounding DINO + DINOv3 ViT-S verifier</td><td>95 % of labelled people</td><td>47 % of colour frames keep a false mosaic</td><td>Rejected</td></tr>
+      <tr class="strong"><td>Grounding DINO + DINOv3 ViT-L LoRA verifier</td><td>HUM731: 172 / 172; VAL261: 0.862</td><td>3.3 % of everyday frames</td><td>Adopted</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="hold">
+    <strong>Not a guarantee.</strong>
+    <span>Recall was measured on small samples from one domain, recall on infrared night footage with people was not measured, and the verifier was trained on calf-barn footage only. Human review remains necessary before any release, and a private way to report a missed person is strongly recommended. OpenVeil masks pixels only, not audio, metadata or burned-in text. <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/limitations.md">All limits</a>.</span>
+  </div>
+</section>
+
+<section id="examples">
+  <h2>Examples</h2>
+  <p>Frames of the released, masked case-study dataset, shown with the data owner's approval. No unmasked person is shown. In the last five (FarmA_R3, plus hard cases from FarmA_R2 and FarmB_R1: small or partly visible people that the pipeline still found and masked) a human reviewer also confirmed that every person is covered, and added no box. Click a frame to enlarge it.</p>
+  <div class="gallery">
+    <figure><a href="img/example_farmA_1.jpg" data-zoom><img src="img/example_farmA_1.jpg" width="2304" height="1296" loading="lazy" alt="Farm A, a frame of the released dataset after masking"></a><figcaption>Farm A, a frame of the released dataset after masking.</figcaption></figure>
+    <figure><a href="img/example_farmA_2.jpg" data-zoom><img src="img/example_farmA_2.jpg" width="2304" height="1296" loading="lazy" alt="Farm A, a second frame of the released dataset after masking"></a><figcaption>Farm A, a second frame of the released dataset after masking.</figcaption></figure>
+    <figure><a href="img/example_farmB_1.jpg" data-zoom><img src="img/example_farmB_1.jpg" width="1280" height="720" loading="lazy" alt="Farm B, a frame of the released dataset after masking"></a><figcaption>Farm B, a frame of the released dataset after masking.</figcaption></figure>
+    <figure><a href="img/example_farmA_r3.jpg" data-zoom><img src="img/example_farmA_r3.jpg" width="1920" height="1080" loading="lazy" alt="Farm A (FarmA_R3), two people masked"></a><figcaption>FarmA_R3: two people masked (1920 x 1080 frame).</figcaption></figure>
+    <figure><a href="img/example_farmA_r2_small.jpg" data-zoom><img src="img/example_farmA_r2_small.jpg" width="1280" height="720" loading="lazy" alt="Farm A (FarmA_R2), a small, partly visible person masked"></a><figcaption>FarmA_R2: one partly visible person only 40 x 29 px (0.13 % of the frame), found and masked.</figcaption></figure>
+    <figure><a href="img/example_farmA_r2_small_annotated.jpg" data-zoom><img src="img/example_farmA_r2_small_annotated.jpg" width="1280" height="720" loading="lazy" alt="The same frame with the mosaic outlined and enlarged"></a><figcaption>The same frame: the outline marks the mosaic, and the inset enlarges it 3x.</figcaption></figure>
+    <figure><a href="img/example_farmA_r2_lowscore.jpg" data-zoom><img src="img/example_farmA_r2_lowscore.jpg" width="1280" height="720" loading="lazy" alt="Farm A (FarmA_R2), a partly visible person with a low detector score, masked"></a><figcaption>FarmA_R2: a partly visible person, 29 x 58 px (0.18 % of the frame). The detector scored it only 0.25, yet the verifier kept it and it was masked.</figcaption></figure>
+    <figure><a href="img/example_farmB_small.jpg" data-zoom><img src="img/example_farmB_small.jpg" width="1280" height="720" loading="lazy" alt="Farm B, a small, partly visible person masked"></a><figcaption>FarmB_R1: a partly visible person, 47 x 84 px (0.43 % of the frame), found and masked.</figcaption></figure>
+  </div>
+</section>
+
+<section id="review">
+  <h2>Review tool</h2>
+  <p>A single local web page with a standard-library Python server. Green boxes are the people the pipeline proposes; dashed boxes are the model's other candidates with their scores. Every save is written to disk at once. The screenshots show the synthetic demo: drawn frames, no real people.</p>
+  <figure class="wide shot">
+    <a href="img/review_overview.png" data-zoom><img src="img/review_overview.png" width="1440" height="900" loading="lazy" alt="The review tool on synthetic demo data: a frame with a green person box and a dashed candidate with score 0.22, and a side panel with buttons and keys."></a>
+    <figcaption>A frame with one confirmed person (green) and a dashed candidate on a second, already pixelated figure.</figcaption>
+  </figure>
+  <div class="pair">
+    <figure class="shot"><a href="img/review_adopt_candidate.png" data-zoom><img src="img/review_adopt_candidate.png" width="1440" height="900" loading="lazy" alt="The review tool after adopting a candidate: it is now a selected green box, and another dashed candidate on a calf is still visible."></a><figcaption>Click a dashed candidate to adopt it.</figcaption></figure>
+    <figure class="shot"><a href="img/review_magnifier.png" data-zoom><img src="img/review_magnifier.png" width="1440" height="900" loading="lazy" alt="The review tool's magnifier over a figure half hidden behind a fence, with its dashed candidate."></a><figcaption>Hold <kbd>Z</kbd> for a 4x magnifier.</figcaption></figure>
+  </div>
+  <div class="scroll keys"><table>
+    <thead><tr><th>Key or action</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>Enter</kbd></td><td>The frame is right: save it and go to the next</td></tr>
+      <tr><td>Click a dashed box</td><td>Adopt the candidate as a person</td></tr>
+      <tr><td>Drag</td><td>Draw a new box, or move and resize a selected one</td></tr>
+      <tr><td><kbd>X</kbd></td><td>Delete the selected box</td></tr>
+      <tr><td><kbd>N</kbd> / <kbd>U</kbd></td><td>Nobody in the frame / mark the frame unsure</td></tr>
+      <tr><td>Hold <kbd>Z</kbd></td><td>Magnifier</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The server listens on 127.0.0.1 only. The review folder holds unmasked frames: never share it. Full tutorial: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/review_tool.md">docs/review_tool.md</a>.</p>
+</section>
+
+<section id="start">
+  <h2>Get started</h2>
+  <p>OpenVeil needs Python ≥ 3.10. Try the review tool first; it needs no GPU and no data.</p>
+<pre><code>git clone https://github.com/Sonam525/OpenVeil.git openveil &amp;&amp; cd openveil
+pip install -e ".[video,detect,review]"
+openveil review demo          # synthetic frames, http://127.0.0.1:8766</code></pre>
+  <p>Detection runs best on a CUDA GPU (<code>--device cpu</code> works, slowly) and needs the gated DINOv3 ViT-L/16 base model (accept Meta's DINOv3 License on its Hugging Face page and log in) and the <a href="#weights">verifier weights</a>; review and apply run on a CPU. Then mask your own videos:</p>
+<pre><code>openveil detect videos/*.mp4 --out tables/ --config my_config.yaml --device cuda
+openveil review build --tables tables/ --videos videos/ --out review/
+openveil review serve review/            # http://127.0.0.1:8765
+openveil review export review/ --overrides overrides.json
+openveil apply video videos/cam1.mp4 --table tables/cam1.json.gz \
+    --out masked/cam1.mp4 --overrides overrides.json
+openveil verify videos/cam1.mp4 masked/cam1.mp4</code></pre>
+  <p class="note">Every command, still images and tar shards, a config file and the model-free trial run: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/usage.md">docs/usage.md</a>. Every setting: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/configuration.md">docs/configuration.md</a>.</p>
+</section>
+
+<section id="weights">
+  <h2>Weights</h2>
+  <p><strong>Built with DINOv3.</strong> The crop verifier of the case study, a LoRA adapter (rank 32) and an MLP head on DINOv3 ViT-L/16, is on the Hugging Face Hub as <a href="https://huggingface.co/Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16">Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16</a>, under the DINOv3 License. The DINOv3 backbone is not included and no merged model is provided: download it yourself from Meta's gated repository.</p>
+<pre><code>from huggingface_hub import snapshot_download
+
+snapshot_download("Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16",
+                  local_dir="weights/OpenVeil-Verifier-DINOv3-ViT-L16")</code></pre>
+  <div class="scroll"><table>
+    <thead><tr><th>File</th><th>Content</th></tr></thead>
+    <tbody>
+      <tr><td><code>adapter_config.json</code>, <code>adapter_model.safetensors</code></td><td>LoRA adapter (PEFT format, rank 32), 56.7 MB</td></tr>
+      <tr><td><code>head.safetensors</code></td><td>MLP head (1024 → 1024 → 512 → 2), 6.3 MB</td></tr>
+      <tr><td><code>meta.json</code></td><td>Training recipe and preprocessing</td></tr>
+      <tr><td><code>SHA256SUMS</code></td><td>Checksums of the four files above</td></tr>
+      <tr><td><code>LICENSE</code>, <code>NOTICE</code></td><td>The DINOv3 License and the attribution</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Check the download with <code>sha256sum -c SHA256SUMS</code> inside that folder. Trained and checked with <code>transformers</code> 4.57.1 and <code>peft</code> 0.13.2; <code>transformers</code> 5 renames the DINOv3 modules, so OpenVeil requires <code>transformers&gt;=4.56,&lt;5</code>. Training data, metrics and limits: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/model_card.md">model card</a>.</p>
+</section>
+
+<section id="licences">
+  <h2>Licences</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Item</th><th>Terms</th></tr></thead>
+    <tbody>
+      <tr><td>Code</td><td>Apache-2.0</td></tr>
+      <tr><td>Verifier weights</td><td>DINOv3 License, published separately with a copy of it. Not Apache-2.0</td></tr>
+      <tr><td>DINOv3 ViT-L/16 base model</td><td>DINOv3 License, gated with manual approval by Meta</td></tr>
+      <tr><td>Grounding DINO base</td><td>Apache-2.0, downloaded at run time</td></tr>
+      <tr><td>FFmpeg, x264, x265</td><td>Reached through PyAV, which you install. Its wheels bundle FFmpeg linked with x264 and x265 (GPL-2.0-or-later). Not redistributed by OpenVeil; masked outputs are not GPL</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">The DINOv3 License requires acknowledging DINOv3 in publications of results and restricts some uses, for example end uses prohibited by trade controls. Encoding H.264/HEVC may need patent licences for commercial use. Details: <a href="https://github.com/Sonam525/OpenVeil/blob/main/THIRD_PARTY.md">THIRD_PARTY.md</a>. This is not legal advice.</p>
+</section>
+
+<section id="cite">
+  <h2>Citation</h2>
+  <p>An arXiv preprint is forthcoming. Until then, please cite the software (<a href="https://github.com/Sonam525/OpenVeil/blob/main/CITATION.cff">CITATION.cff</a>):</p>
+<pre><code>@software{yang2026openveil,
+  author  = {Yang, Haiyu and Hostens, Miel},
+  title   = {{OpenVeil}: Detect, verify and mosaic people in video datasets
+             before release, with an interactive human review tool},
+  version = {0.1.0},
+  year    = {2026},
+  url     = {https://github.com/Sonam525/OpenVeil},
+  license = {Apache-2.0}
+}
+
+@misc{simeoni2025dinov3,
+  title         = {{DINOv3}},
+  author        = {Sim{\'e}oni, Oriane and Vo, Huy V. and Seitzer, Maximilian and
+                   Baldassarre, Federico and Oquab, Maxime and Jose, Cijo and
+                   Khalidov, Vasil and Szafraniec, Marc and Yi, Seungeun and
+                   Ramamonjisoa, Micha{\"e}l and Massa, Francisco and
+                   Haziza, Daniel and Wehrstedt, Luca and Wang, Jianyuan and
+                   Darcet, Timoth{\'e}e and Moutakanni, Th{\'e}o and
+                   Sentana, Leonel and Roberts, Claire and Vedaldi, Andrea and
+                   Tolan, Jamie and Brandt, John and Couprie, Camille and
+                   Mairal, Julien and J{\'e}gou, Herv{\'e} and Labatut, Patrick and
+                   Bojanowski, Piotr},
+  year          = {2025},
+  eprint        = {2508.10104},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2508.10104}
+}</code></pre>
+  <ul class="plain">
+    <li>If you use the verifier weights, please also cite DINOv3 (arXiv:2508.10104, second entry above); the DINOv3 License requires acknowledging it.</li>
+    <li>Case-study data: the <a href="https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset">Calf Play Behavior Dataset</a>, version 1.2 (the masked release).</li>
+  </ul>
+  <p class="authors">Haiyu Yang (<a href="https://orcid.org/0009-0007-5125-4958">ORCID 0009-0007-5125-4958</a>) and Miel Hostens, Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA.</p>
+</section>
+
+</main>
+
+<dialog id="zoom" aria-label="Enlarged image">
+  <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+  <img alt="">
+  <p class="zoom-cap"></p>
+</dialog>
+
+<footer>
+  <p>Static page. No tracking, no cookies. Code under Apache-2.0; verifier weights under the DINOv3 License. Built with DINOv3.</p>
+</footer>
+
+<script src="site.js"></script>
+</body>
+</html>

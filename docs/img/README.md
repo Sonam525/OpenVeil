@@ -1,7 +1,7 @@
 # Images for the documentation
 
 This folder holds the images the documentation refers to: the review-tool
-screenshots, a synthetic mosaic illustration and three masked example stills of
+screenshots, a synthetic mosaic illustration and eight masked example stills of
 the released dataset. This file lists every image and the rules each one must
 follow.
 
@@ -28,7 +28,8 @@ follow.
 
 ## Review-tool screenshots (from the synthetic demo)
 
-Used in [review_tool.md](../review_tool.md) and the README. All five are
+Used in [review_tool.md](../review_tool.md); `review_overview.png` also in the
+README and on the project page (`docs/index.html`). All five are
 **synthetic demo data, no real people**: the frames are drawn by
 `openveil review demo` (grey silhouettes, calf-like shapes, fences), so they
 need no data-owner approval.
@@ -61,7 +62,8 @@ The page sets `data-ready="1"` on `<html>` once a scripted state is applied.
 
 ## Masked example stills (real footage, already masked)
 
-Used in [case_study.md](../case_study.md) and the README. **Each needs
+Used in [case_study.md](../case_study.md), the README and the project page
+(`docs/index.html`). **Each needs
 data-owner approval before it is added.** The stills are frames of the masked
 release, never of the unmasked footage. Each file is a byte-for-byte copy of
 the still the data owner approved (not re-encoded); those files carry no
@@ -87,8 +89,12 @@ in the review tool that every person is covered.
 
 ## Diagrams
 
-The pipeline diagram is written in Mermaid inside the Markdown files and needs
-no image.
+The README and the project page use drawn SVG figures (the banner and the
+pipeline), made by `figures/make_figures.py` with the standard library only and
+copied to `docs/assets/` for the project page. The banner is drawn: it shows
+no footage and no real person, and its people exist only as the mosaic. The
+pipeline diagram in [how_it_works.md](../how_it_works.md) is written in Mermaid
+and needs no image.
 
 | File | Shows | Status |
 |---|---|---|

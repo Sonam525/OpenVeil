@@ -10,6 +10,27 @@ what the numbers were, and why the final pipeline is
 > a human reviews the hard cases, and a smart cut re-encodes as little as
 > possible.**
 
+## Summary
+
+We tried a dozen detectors and pipelines on the case-study footage before
+settling on the cascade. A summary (the full table with every number and its
+evaluation set is in [section 4](#4-comparison-table)):
+
+| Approach | Recall | False mosaics | Verdict |
+|---|---|---|---|
+| YOLO11x + OWLv2 + tracking (pilot) | 44 / 53 person events fully masked | 67% of masked area on animals or objects | Rejected |
+| Pilot + fixed privacy zones | 53 / 53 events | masks on 32.4% of all frame area | Rejected |
+| Grounding DINO alone | VAL261: 0.876 (loose) | 1.68% of the area of person-free frames (same study); in a separate evaluation (recall 0.855 IoU) 59.2% of person-free frames got a mosaic | Kept as proposer |
+| LocateAnything-3B | VAL261: 0.772 | 49.3% of person-free frames; 1.99 s per frame | Rejected |
+| YOLO11l fine-tuned in-domain | VAL261: 0.634 | 4.9% of person-free frames | Rejected (recall) |
+| Grounding DINO + DINOv3 ViT-S verifier | 95% of labelled people | 47% of colour frames keep a false mosaic | Rejected |
+| **Grounding DINO + DINOv3 ViT-L LoRA verifier (final)** | **HUM731: 172 / 172; VAL261: 0.862** | **3.3% of everyday frames** | **Adopted** |
+
+In short: open-vocabulary detectors find people in odd poses but cannot tell a
+crouching worker from a calf; detectors trained on the target data are precise
+but miss people. Using the first as a proposer and a strong crop classifier as
+a verifier keeps the recall of one and most of the precision of the other.
+
 ## 1. What we were optimising
 
 1. **Recall first.** A missed person is a privacy failure; a false mosaic only
@@ -203,14 +224,16 @@ such a box can blank most of the image. The giant rule drops a box that covers
 at least `min_share` of the image and contains at least 2 smaller boxes (each
 ≥ 80% inside it); the inner boxes stay.
 
-The risk is a person covered by the giant box but not by any inner box. We
-reviewed every frame where the rule would fire, in the review tool, and counted
-a frame as *unsafe* if the reviewer kept the giant box, added a person, or left
+The risk is a person covered by the giant box but not by any inner box. For
+every episode in which the rule fired, we reviewed in the review tool the frame
+where the dropped box was least covered by the remaining boxes (plus the
+biggest-box and middle frames for episodes longer than 10 s), and counted a
+frame as *unsafe* if the reviewer kept the giant box, added a person, or left
 a final box less than half covered by the boxes the rule keeps:
 
 Each row counts only the frames the rule adds over the next stricter
-threshold (the check at 0.50 reviewed all 91 frames where it fires there,
-including the 45 of 0.55):
+threshold (the check at 0.50 reviewed all 91 selected frames where it fires
+there, including the 45 of 0.55):
 
 | `min_share` | Frames added over the stricter threshold | Safe | Notes |
 |---|---|---|---|
