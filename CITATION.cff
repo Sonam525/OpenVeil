@@ -2,7 +2,8 @@ cff-version: 1.2.0
 message: >-
   If you use OpenVeil, please cite it as below. An arXiv preprint describing
   OpenVeil is forthcoming; this file will be updated with its reference when
-  it is available. No DOI has been assigned yet.
+  it is available. No DOI has been assigned to OpenVeil yet. The references
+  below are the case-study dataset and its data descriptor.
 type: software
 title: "OpenVeil: Detect, verify and mosaic people in video datasets before release, with an interactive human review tool"
 abstract: >-
@@ -33,3 +34,43 @@ keywords:
   - human-in-the-loop review
   - Grounding DINO
   - DINOv3
+references:
+  - type: dataset
+    title: "Calf-Play-Behavior-Dataset"
+    authors:
+      - given-names: Haiyu
+        family-names: Yang
+      - given-names: Heidi
+        family-names: Lesscher
+      - given-names: Enhong
+        family-names: Liu
+      - given-names: Miel
+        family-names: Hostens
+    version: "1.2"
+    year: 2026
+    publisher:
+      name: Hugging Face
+    identifiers:
+      - type: doi
+        value: 10.57967/hf/11689
+        description: "Version 1.2, the masked release made with OpenVeil"
+    url: "https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset"
+  - type: article
+    title: "Video recordings and play behaviour annotations of group-housed dairy calves on two Dutch farms"
+    authors:
+      - given-names: Haiyu
+        family-names: Yang
+      - given-names: Heidi
+        family-names: Lesscher
+      - given-names: Enhong
+        family-names: Liu
+      - given-names: Miel
+        family-names: Hostens
+    year: 2026
+    status: preprint
+    repository: "https://arxiv.org/abs/2611.21706"
+    identifiers:
+      - type: other
+        value: "arXiv:2611.21706"
+        description: "arXiv preprint (cs.CV); data descriptor of the case-study dataset, under review at Scientific Data"
+    url: "https://arxiv.org/abs/2611.21706"

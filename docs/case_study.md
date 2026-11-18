@@ -6,6 +6,12 @@ collected to study behaviour, but barn staff and visitors walk through the pens
 every day, so people appear in many videos. The dataset could only be released
 openly once those people were masked.
 
+The dataset is described in a data descriptor
+([arXiv:2611.21706](https://arxiv.org/abs/2611.21706)). Version 1.2
+([DOI 10.57967/hf/11689](https://doi.org/10.57967/hf/11689)) of the
+[Calf Play Behavior Dataset](https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset)
+is the masked release produced with OpenVeil.
+
 Farms and recordings are given pseudonyms here: **Farm A** and **Farm B**, with
 four recordings `FarmA_R1`, `FarmA_R2`, `FarmA_R3` and `FarmB_R1`.
 

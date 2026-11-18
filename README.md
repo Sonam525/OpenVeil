@@ -202,7 +202,7 @@ This is OpenVeil version 0.1.0. An arXiv preprint is forthcoming, and [`CITATION
 
 > Yang, H., & Hostens, M. (2026). *OpenVeil: Detect, verify and mosaic people in video datasets before release, with an interactive human review tool* (Version 0.1.0) [Computer software]. https://github.com/Sonam525/OpenVeil
 
-If you use the verifier weights, please also cite DINOv3 (arXiv:2508.10104); the DINOv3 License requires acknowledging it. The case-study data are the [Calf Play Behavior Dataset](https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset), version 1.2 (the masked release).
+If you use the verifier weights, please also cite DINOv3 (arXiv:2508.10104); the DINOv3 License requires acknowledging it. The case-study data are the [Calf Play Behavior Dataset](https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset), version 1.2 (the masked release, made with OpenVeil; DOI [10.57967/hf/11689](https://doi.org/10.57967/hf/11689)). The dataset is described in a data descriptor ([arXiv:2611.21706](https://arxiv.org/abs/2611.21706), under review at Scientific Data). Both are in the BibTeX below.
 
 <details>
 <summary>BibTeX</summary>
@@ -235,6 +235,26 @@ If you use the verifier weights, please also cite DINOv3 (arXiv:2508.10104); the
   archivePrefix = {arXiv},
   primaryClass  = {cs.CV},
   url           = {https://arxiv.org/abs/2508.10104}
+}
+
+@misc{yang2026calfplaydata,
+  title     = {{Calf-Play-Behavior-Dataset}},
+  author    = {Yang, Haiyu and Lesscher, Heidi and Liu, Enhong and Hostens, Miel},
+  year      = {2026},
+  version   = {1.2},
+  publisher = {Hugging Face},
+  doi       = {10.57967/hf/11689},
+  url       = {https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset}
+}
+
+@misc{yang2026calfplay,
+  title         = {Video recordings and play behaviour annotations of group-housed dairy calves on two {Dutch} farms},
+  author        = {Yang, Haiyu and Lesscher, Heidi and Liu, Enhong and Hostens, Miel},
+  year          = {2026},
+  eprint        = {2611.21706},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2611.21706}
 }
 ```
 

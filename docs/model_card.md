@@ -81,7 +81,10 @@ false mosaics), or train your own verifier with the `openveil.train` package.
 
 - **Source**: frames from fixed cameras in calf barns of the case-study dataset
   ([case_study.md](case_study.md)), whose masked version is the released
-  dataset: about 3,700 frames from 1,158 videos of 2 farms (Farm A and Farm B).
+  dataset (version 1.2, DOI
+  [10.57967/hf/11689](https://doi.org/10.57967/hf/11689); data descriptor
+  [arXiv:2611.21706](https://arxiv.org/abs/2611.21706)): about 3,700 frames
+  from 1,158 videos of 2 farms (Farm A and Farm B).
   The crops were cut from the original, unmasked recordings, because the model
   must see the people it learns to find. **The training crops and frames are
   not distributed.**
