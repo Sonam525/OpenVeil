@@ -75,7 +75,6 @@ profile or comment segments).
 | `example_farmA_1.jpg` | Farm A, a frame of the released dataset after masking (2304 x 1296) | approved by the data owner, added |
 | `example_farmA_2.jpg` | Farm A, a second frame of the released dataset after masking (2304 x 1296) | approved by the data owner, added |
 | `example_farmB_1.jpg` | Farm B, a frame of the released dataset after masking (1280 x 720) | approved by the data owner, added |
-
 | `example_farmA_r3.jpg` | FarmA_R3, two people masked (1920 x 1080) | approved by the data owner, added |
 | `example_farmA_r2_small.jpg` | FarmA_R2, a partly visible person of 40 x 29 px masked (1280 x 720) | approved by the data owner, added |
 | `example_farmA_r2_small_annotated.jpg` | The same frame with the mosaic outlined and a 3x inset of it, cut from the same masked pixels | approved by the data owner, added |

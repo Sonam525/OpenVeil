@@ -22,13 +22,13 @@
   <a href="#quick-start">Quick start</a> ·
   <a href="#weights">Weights</a> ·
   <a href="#licences">Licences</a> ·
-  <a href="#citation">Citation</a>
+  <a href="#citing-openveil">Citing</a>
 </p>
 
 Footage of animals, farms, labs or streets often shows staff, visitors or bystanders who could be recognised, and masking them by hand does not scale. OpenVeil errs on the side of finding every person, lets a human check the hard frames, and mosaics them while touching as little of the footage as possible. It was built to release a calf play-behaviour dataset of 1,173 videos (about 50.8 million frames) from two farms.
 
-- **Every person covered in everyday frames.** All 172 people in 731 human-checked frames had at least 90 % of their area under a mosaic.
-- **Few false mosaics.** 3.3 % of everyday frames keep a false mosaic box, and 0.4 % a big one (≥ 15 % of the image).
+- **All 172 people covered in 731 human-checked everyday frames.** Each had at least 90 % of their area under a mosaic (52 frames with people). The checked boxes were drawn while reviewing the pipeline's own proposals, so this holds partly by construction.
+- **Few false mosaics.** 3.3 % of everyday frames keep a false mosaic box, and 0.45 % a big one (≥ 15 % of the image).
 - **Cheap to run, quick to check.** 0.0508 detector calls per frame over the whole dataset (case study, `clock` policy: sparse at night; the default policy makes more calls), and 0.6 s median per frame in human review.
 - **Minimal footprint.** Only 12.0 % of video packets were re-encoded; every other packet was copied bit for bit, and every masked file passed the automatic check.
 
@@ -62,7 +62,7 @@ From the case study: 1,173 videos (about 50.8 million frames) of calf barns on t
 | Measure | Result | Evaluation set |
 |:---|:---|:---|
 | People covered (≥ 90 % of their area under a mosaic) | **172 / 172** | HUM731: 731 everyday frames checked by a human, 52 with people |
-| Frames with a false mosaic box | **3.3 %** (0.4 % with a big one) | HUM731, weighted to 2,000 sampled everyday frames |
+| Frames with a false mosaic box | **3.3 %** (0.45 % with a big one) | HUM731, weighted to 2,000 sampled everyday frames |
 | Recall on hard validation frames | **0.862** (loose matching) | VAL261: 261 frames enriched with partial and missed people |
 | False mosaic area | **0.22 %** of frame area | VAL261, schedule replay |
 | Detector calls | **0.0508 per frame** | whole dataset, `clock` day/night policy |
@@ -71,14 +71,14 @@ From the case study: 1,173 videos (about 50.8 million frames) of calf barns on t
 | Masked files passing the automatic check | **all** | 1,023 videos, 270 frame shards |
 | Human review | **0.6 s** median per frame | 3,194 frames in about 2.4 h |
 
-<sub>Loose matching counts a person as found if any mosaic box matches (IoU ≥ 0.5) a box drawn on any part of them. VAL261 is scored by the released model, whose training data include other minutes of most of the same videos, so it is not a held-out estimate; HUM731 is scored by a model trained without its videos. The full table with its notes is in [docs/case_study.md](docs/case_study.md#results-at-a-glance).</sub>
+<sub>Loose matching counts a person as found if any mosaic box matches (IoU ≥ 0.5) a box drawn on any part of them. VAL261 is scored by the released model, whose training data include other minutes of most of the same videos, so it is not a held-out estimate; HUM731 is not held out either: each frame was scored by a model that had not seen its video but was trained on the other half of the HUM731 videos (cross-fitting), its boxes were drawn while checking the pipeline's proposals, so a person missed by both the pipeline and the reviewer cannot appear in it, and the 0.10 threshold was set with HUM731 in view. Its full coverage therefore holds partly by construction. The full table with its notes is in [docs/case_study.md](docs/case_study.md#results-at-a-glance).</sub>
 
 **Why a cascade.** Open-vocabulary detectors find people in odd poses but cannot tell a crouching worker from a calf; detectors trained on the target data are precise but miss people. Using the first as a proposer and a strong crop classifier as a verifier keeps the recall of one and most of the precision of the other.
 
 | Approach | Recall | False mosaics | Verdict |
 |:---|:---|:---|:---|
 | YOLO11x + OWLv2 + tracking (pilot) | 44 / 53 person events fully masked | 67 % of masked area on animals or objects | Rejected |
-| Grounding DINO alone | VAL261: 0.876 (loose) | 1.68 % of the area of person-free frames; in a separate evaluation 59.2 % of person-free frames got a mosaic | Kept as proposer |
+| Grounding DINO alone | VAL261: 0.876 (loose) | 59.2 % of person-free frames got a mosaic (4.57 % of their area) | Kept as proposer |
 | YOLO11l fine-tuned in-domain | VAL261: 0.634 | 4.9 % of person-free frames | Rejected (recall) |
 | Grounding DINO + DINOv3 ViT-S verifier | 95 % of labelled people | 47 % of colour frames keep a false mosaic | Rejected |
 | **Grounding DINO + DINOv3 ViT-L LoRA verifier** | **HUM731: 172 / 172; VAL261: 0.862** | **3.3 % of everyday frames** | **Adopted** |
@@ -166,6 +166,7 @@ Then set `verifier.adapter_dir` to that folder. Checksums, tested library versio
 | [`docs/img/`](docs/img/README.md) | Review-tool screenshots (synthetic), the mosaic drawing and the approved masked stills |
 | [`figures/`](figures) | The banner, the pipeline figures and the script that draws them |
 | [`tests/`](tests) | Tests on synthetic data: `python -B -m unittest discover -s tests` |
+| [`CITATION.cff`](CITATION.cff), [`.zenodo.json`](.zenodo.json), [`CHANGELOG.md`](CHANGELOG.md) | Citation and release metadata, and the changes in each release |
 
 ### Documentation
 
@@ -196,13 +197,21 @@ Then set `verifier.adapter_dir` to that folder. Checksums, tested library versio
 ## Authors
 
 - **Haiyu Yang** ([ORCID 0009-0007-5125-4958](https://orcid.org/0009-0007-5125-4958)), Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA
-- **Miel Hostens**, Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA
+- **Miel Hostens** ([ORCID 0000-0001-5376-976X](https://orcid.org/0000-0001-5376-976X)), Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA
 
-## Citation
+## Citing OpenVeil
 
-This is OpenVeil version 0.1.0. An arXiv preprint is forthcoming, and [`CITATION.cff`](CITATION.cff) will then be updated with its reference. Until then, please cite the software:
+Each OpenVeil release is archived on [Zenodo](https://zenodo.org), which assigns it a version DOI.
 
-> Yang, H., & Hostens, M. (2026). *OpenVeil: Detect, verify and mosaic people in video datasets before release, with an interactive human review tool* (Version 0.1.0) [Computer software]. https://github.com/Sonam525/OpenVeil
+**Release:** 1.1.0 (2026-11-24). What changed in each release: [CHANGELOG.md](CHANGELOG.md).
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24505557.svg)](https://doi.org/10.5281/zenodo.24505557)
+
+The concept DOI [10.5281/zenodo.24505557](https://doi.org/10.5281/zenodo.24505557) cites all versions and resolves to the latest one; the version DOI of each release is on its Zenodo record.
+
+Please cite the concept DOI, or the version DOI of the version you used; [`CITATION.cff`](CITATION.cff) holds the same metadata (GitHub's "Cite this repository" button reads it). An arXiv preprint describing OpenVeil is forthcoming, and `CITATION.cff` will then be updated with its reference. Until then:
+
+> Yang, H., & Hostens, M. (2026). *OpenVeil: Detect, verify and mosaic people in video datasets before release, with an interactive human review tool* (Version 1.1.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24505557
 
 If you use the verifier weights, please also cite DINOv3 (arXiv:2508.10104); the DINOv3 License requires acknowledging it. The case-study data are the [Calf Play Behavior Dataset](https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset), version 1.2 (the masked release, made with OpenVeil; DOI [10.57967/hf/11689](https://doi.org/10.57967/hf/11689)). The dataset is described in a data descriptor ([arXiv:2611.21706](https://arxiv.org/abs/2611.21706), under review at Scientific Data). Both are in the BibTeX below.
 
@@ -211,13 +220,15 @@ If you use the verifier weights, please also cite DINOv3 (arXiv:2508.10104); the
 
 ```bibtex
 @software{yang2026openveil,
-  author  = {Yang, Haiyu and Hostens, Miel},
-  title   = {{OpenVeil}: Detect, verify and mosaic people in video datasets
-             before release, with an interactive human review tool},
-  version = {0.1.0},
-  year    = {2026},
-  url     = {https://github.com/Sonam525/OpenVeil},
-  license = {Apache-2.0}
+  author    = {Yang, Haiyu and Hostens, Miel},
+  title     = {{OpenVeil}: Detect, verify and mosaic people in video datasets
+               before release, with an interactive human review tool},
+  version   = {1.1.0},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24505557},
+  url       = {https://github.com/Sonam525/OpenVeil},
+  license   = {Apache-2.0}
 }
 
 @misc{simeoni2025dinov3,

@@ -7,7 +7,11 @@ What OpenVeil does and does not guarantee. The numbers come from the case study
 - **Not a guarantee.** Recall was measured on a 261-frame validation set
   (VAL261, recall 0.862 under loose matching) and on a 731-frame human-reviewed
   sample of everyday frames (HUM731, 172 of 172 people covered, but only 52
-  frames with people). These are small samples from one domain. **Human review
+  frames with people). These are small samples from one domain. The HUM731
+  boxes were drawn while checking the pipeline's proposals, so it cannot
+  contain a person missed by both the pipeline and the reviewer; the verifier
+  was cross-fitted over the HUM731 videos, and the 0.10 threshold was chosen
+  with HUM731 in view, so these results are optimistic. **Human review
   remains necessary** before any release, and a private channel for reporting a
   missed person is strongly recommended.
 - **Hardest cases.** Brief or partial appearances (limbs or boots at the image
@@ -28,7 +32,10 @@ What OpenVeil does and does not guarantee. The numbers come from the case study
   x264/x265; other codecs are re-encoded in full.
 - **Night schedule.** With the `clock` policy the night chunks are scanned
   every 5 s; a person who stays in view is masked throughout (the last frame of
-  every chunk is a checkpoint too).
+  every chunk is a checkpoint too). The code that masked the case-study
+  dataset did not have this checkpoint: 3,216 night frames at 134 chunk
+  boundaries were left outside the hold (whether those boxes are people is
+  not known). OpenVeil closes these gaps.
 - **Pixels only.** OpenVeil masks people in the image. It does not handle
   audio, metadata, file names, burned-in text or other identifying information.
   Mosaic cells are coarse (1/36 of the image height), but no formal

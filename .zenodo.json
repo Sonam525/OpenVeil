@@ -1,0 +1,60 @@
+{
+  "upload_type": "software",
+  "title": "OpenVeil: Detect, verify and mosaic people in video datasets before release, with an interactive human review tool",
+  "version": "1.1.0",
+  "publication_date": "2026-11-24",
+  "description": "<p>OpenVeil helps researchers release video datasets that show people. It proposes person boxes with an open-vocabulary detector (Grounding DINO), verifies them with a fine-tuned crop classifier (a LoRA adapter and MLP head on DINOv3 ViT-L/16), lets a human check the hard cases in a local review tool, and mosaics the people while re-encoding only the parts of each video that contain a mosaic (smart cut).</p><p>It was built to release the Calf-Play-Behavior-Dataset (version 1.2, DOI 10.57967/hf/11689), a calf play-behaviour dataset of 1,173 videos from two farms.</p><p>The code is under Apache-2.0. The crop verifier weights are not part of this archive: they are published separately on Hugging Face under the DINOv3 License. Built with DINOv3.</p>",
+  "creators": [
+    {
+      "name": "Yang, Haiyu",
+      "affiliation": "Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA",
+      "orcid": "0009-0007-5125-4958"
+    },
+    {
+      "name": "Hostens, Miel",
+      "affiliation": "Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA",
+      "orcid": "0000-0001-5376-976X"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Hostens, Miel",
+      "type": "Supervisor",
+      "affiliation": "Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA",
+      "orcid": "0000-0001-5376-976X"
+    }
+  ],
+  "access_right": "open",
+  "license": "apache-2.0",
+  "language": "eng",
+  "keywords": [
+    "privacy",
+    "anonymisation",
+    "person detection",
+    "video datasets",
+    "data release",
+    "human-in-the-loop review",
+    "Grounding DINO",
+    "DINOv3"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.57967/hf/11689",
+      "scheme": "doi",
+      "relation": "compiles",
+      "resource_type": "dataset"
+    },
+    {
+      "identifier": "arXiv:2611.21706",
+      "scheme": "arxiv",
+      "relation": "references",
+      "resource_type": "publication-preprint"
+    },
+    {
+      "identifier": "https://huggingface.co/Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16",
+      "scheme": "url",
+      "relation": "isSupplementedBy"
+    }
+  ],
+  "notes": "Please cite the concept DOI 10.5281/zenodo.24505557, which covers all versions, or the version DOI of the release you used. Version 1.1.0 supersedes 1.0.0 (10.5281/zenodo.24505558), which archived an earlier commit that still reported version 0.1.0 and used the default prompt \"person.\". An arXiv preprint describing OpenVeil is forthcoming."
+}

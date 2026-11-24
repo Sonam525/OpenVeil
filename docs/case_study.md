@@ -23,7 +23,7 @@ The headline numbers of the case study, a calf play-behaviour dataset of 1,173 v
 | Measure | Result | Evaluation set |
 |---|---|---|
 | People covered (≥ 90% of their area under a mosaic) | **172 / 172** | 731 everyday frames checked by a human (HUM731; 52 frames with people) |
-| Frames with a false mosaic box | **3.3%** (0.4% with a big one, ≥ 15% of the image) | HUM731, weighted to 2,000 sampled everyday frames |
+| Frames with a false mosaic box | **3.3%** (0.45% with a big one, ≥ 15% of the image) | HUM731, weighted to 2,000 sampled everyday frames |
 | Recall on hard validation frames | **0.862** (loose matching¹) | 261 validation frames enriched with partial and missed people (VAL261), full pipeline with the production schedule; scored by the released model² |
 | False mosaic area | **0.22%** of frame area | VAL261 schedule replay² |
 | Detector calls | **0.0508 per frame** | whole dataset, `clock` day/night policy (sparse at night) |
@@ -38,11 +38,17 @@ them, so a box on a hand counts. It is lenient; see
 [design_rationale.md](design_rationale.md#2-how-we-measured).
 ² Scored by the released model, whose training data include other minutes of
 most of the same source videos (no overlapping frames): not a held-out
-estimate. HUM731 is scored by a model trained without its videos.
+estimate. HUM731 is not held out either: each frame was scored by a model
+that had not seen its video but was trained on the other half of the HUM731
+videos (cross-fitting). Its boxes were drawn while checking the pipeline's
+proposals, so a person missed by both the pipeline and the reviewer cannot
+appear in it, and the 0.10 threshold was set with HUM731 in view: its full
+coverage holds partly by construction.
 
-Compared with the alternatives we tried, the final cascade was the only option
-that combined full coverage of people in everyday frames with a low false-mosaic
-rate (see [design_rationale.md](design_rationale.md#summary)).
+Compared with the detectors we tried, only a proposer-plus-verifier cascade
+combined full coverage of people in everyday frames with a low false-mosaic
+rate; which DINOv3 verifier is used matters much less than having one (see
+[design_rationale.md](design_rationale.md#summary)).
 
 The outcomes in numbers:
 
@@ -50,7 +56,7 @@ The outcomes in numbers:
 |---|---|
 | Workers in everyday frames (HUM731) | all 172 people in the 52 frames with people covered by the mosaic |
 | Legs and boots behind a pen wall, people at the image edge | the hardest cases (see [limitations.md](limitations.md)); VAL261 is enriched with them, and 14% of its people are not found under loose matching |
-| Calves and objects mistaken for people | false mosaics on animals and objects: 3.3% of everyday frames keep one, 0.4% a big one (≥ 15% of the image) |
+| Calves and objects mistaken for people | false mosaics on animals and objects: 3.3% of everyday frames keep one, 0.45% a big one (≥ 15% of the image) |
 | Infrared night frames | detected with the same models; recall with people at night was not measured |
 
 ## The data
@@ -89,7 +95,7 @@ day/night policy (day 06:00–23:00) instead of the default `always_full`
 | Night | 0.11 M calls on 11.5 M frames |
 | Frames with a box (before hold and enlargement) | 4.67% overall: `FarmA_R1` 3.22%, `FarmA_R2` 3.22%, `FarmA_R3` 7.17%, `FarmB_R1` 6.31% |
 | Hardware | NVIDIA A10 GPUs, several worker processes per GPU |
-| Cost | about 280 A10-hours estimated by a schedule replay before the run, which assumed 0.085 detector calls per frame, 5.9 frames/s for Grounding DINO and 160 crops/s for the classifier; the real run made 0.0508 calls per frame, about 120 Grounding DINO hours at the same assumed speed. Billed hours were not recorded |
+| Cost | about 295 A10-hours (204 Grounding DINO + 91 classifier) estimated by a schedule replay before the run, which assumed 0.085 detector calls per frame, 5.9 frames/s for Grounding DINO and 160 crops/s for the classifier; the real run made 0.0508 calls per frame, about 122 Grounding DINO hours at the same assumed speed. Billed hours were not recorded |
 
 ## Human review
 
@@ -100,7 +106,7 @@ greedily at IoU ≥ 0.5; "moved" means a matched pair with IoU < 0.8.
 
 | Queue | Frames reviewed | Proposal → human boxes | Kept | Removed | Added | Moved |
 |---|---|---|---|---|---|---|
-| Everyday frames (HUM731, a sample of 2,000 held-out frames) | 731 | 355 → 172 | 172 | 183 | 0 | 2 |
+| Everyday frames (HUM731, from 2,000 frames of 118 videos excluded from label mining) | 731 | 355 → 172 | 172 | 183 | 0 | 2 |
 | Largest mosaics in two pilot videos | 120 | 935 → 763 | 763 | 172 | 0 | 7 |
 | Giant-rule frames (fires at 0.50) | 91 | 875 → 716 | 714 | 161 | 2 | 9 |
 | Giant-rule frames (fires only at 0.40) | 139 | 1,233 → 968 | 964 | 269 | 4 | 9 |
@@ -114,9 +120,11 @@ frame**. Most frames need only a glance and `Enter`.
 
 What the review showed:
 
-- **No missed person in everyday frames.** All 172 people in HUM731 were already
-  covered (each with ≥ 90% of its area under a mosaic at the production
-  threshold). All of them were in colour frames; none of the 217 infrared
+- **No missed person found in the everyday frames checked.** All 172 people
+  in HUM731 were already covered (each with ≥ 90% of its area under a mosaic
+  at the production threshold). The reviewer checked the pipeline's
+  proposals with the other candidates shown, so a person missed by both
+  cannot appear here. All of them were in colour frames; none of the 217 infrared
   frames checked showed a person, so recall on infrared footage is not known.
 - **Detection reviews found no missing box** in the largest-mosaic frames and in
   the one-week check (734 detection intervals, of which 579 were false alarms).
@@ -152,6 +160,11 @@ What the review showed:
 - **Size**: the videos changed from 1,781.7 GB to 1,800.5 GB in total; the
   frame shards from 575.8 GB to 572.7 GB.
 - The apply step ran on CPU nodes.
+- **Night chunk boundaries.** The code that masked the case study
+  interpolated boxes only within a 60 s chunk, so at night 3,216 frames at
+  134 chunk boundaries with a box on both sides were left outside the hold
+  (whether those boxes are people is not known). OpenVeil makes the last
+  frame of every chunk a checkpoint, which closes these gaps.
 
 ## Example frames
 

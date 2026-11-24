@@ -16,7 +16,8 @@ These tests read only the repository's own text files. They check that
   and, where the value is a plain number, matches the ``production`` preset;
 * the drawn figures are up to date with ``figures/make_figures.py``, accessible,
   copied unchanged to ``docs/assets/`` and not ignored by git;
-* LICENSE is the full Apache-2.0 text and CITATION.cff is well formed.
+* LICENSE is the full Apache-2.0 text, CITATION.cff is well formed, and the release metadata
+  (CITATION.cff, .zenodo.json, CHANGELOG.md) agree with the package version and each other.
 """
 from __future__ import annotations
 
@@ -38,8 +39,9 @@ DOC_FILES = [
     "docs/model_card.md",
     "docs/img/README.md",
     "THIRD_PARTY.md",
+    "CHANGELOG.md",
 ]
-OTHER_FILES = ["LICENSE", "NOTICE", "CITATION.cff"]
+OTHER_FILES = ["LICENSE", "NOTICE", "CITATION.cff", ".zenodo.json"]
 # The GitHub Pages project page (served from docs/) and the drawn figures.
 PAGE_FILES = ["docs/index.html", "docs/style.css", "docs/site.js"]
 FIGURES = ["banner.svg", "pipeline.svg", "pipeline_narrow.svg"]
@@ -55,6 +57,15 @@ SCRUB_WORDS_ENV = "OPENVEIL_SCRUB_WORDS"
 HOLDER = "Copyright 2026 Haiyu Yang and Miel Hostens"
 OLD_HOLDER = "The OpenVeil " + "Authors"          # the placeholder holder used before the authors were named
 WEIGHTS_REPO = "Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16"
+ORCIDS = {("Haiyu", "Yang"): "0009-0007-5125-4958", ("Miel", "Hostens"): "0000-0001-5376-976X"}
+# DOIs that Zenodo has assigned (never invent one: add a DOI only once Zenodo shows it).
+# The concept DOI cites all versions and resolves to the latest one. Once Zenodo shows the
+# version DOI of a release, a docs-only commit adds it here, to the CITATION.cff identifiers
+# (after the ones already listed) and to that version's CHANGELOG entry; the tests require all three.
+ZENODO_CONCEPT_DOI = "10.5281/zenodo.24505557"
+ZENODO_VERSION_DOIS = {"1.0.0": "10.5281/zenodo.24505558"}
+ZENODO_DOIS = {ZENODO_CONCEPT_DOI, *ZENODO_VERSION_DOIS.values()}
+ZENODO_DOI_RE = re.compile(r"10\.5281/zenodo\.[^\s\"'`)\]}<>,;]*")
 
 
 def _private_words() -> set:
@@ -303,6 +314,17 @@ class TestLinksAndImages(unittest.TestCase):
                 self.assertIn(f"img/{name}", tutorial)
                 self.assertIn(name, _read(PLANNED_IMAGES_README))
 
+    def test_markdown_tables_are_not_split(self):
+        # A table row after a blank line, without a header separator under it, renders as a
+        # paragraph of literal pipes on GitHub.
+        for rel in DOC_FILES:
+            text = re.sub(r"```.*?```", "", _read(rel), flags=re.DOTALL)
+            lines = text.splitlines()
+            for i in range(1, len(lines) - 1):
+                if lines[i - 1].strip() == "" and lines[i].lstrip().startswith("|"):
+                    with self.subTest(file=rel, line=lines[i][:60]):
+                        self.assertRegex(lines[i + 1].strip(), r"^\|[\s:|-]*-[\s:|-]*\|$")
+
     def test_mermaid_diagrams(self):
         self.assertIn("```mermaid\nflowchart", _read("docs/how_it_works.md"))
 
@@ -430,7 +452,9 @@ class TestLicenceFiles(unittest.TestCase):
         self.assertNotIn(OLD_HOLDER, text)
         self.assertIn("https://github.com/Sonam525/OpenVeil", text)
         self.assertRegex(text, r"(?m)^license: Apache-2\.0$")
-        self.assertNotRegex(text, r"(?mi)^\s*doi:")
+        # no DOI is invented: a DOI is added only once Zenodo has assigned one to a release
+        dois = [d.strip("'\"") for d in re.findall(r"(?mi)^\s*doi:\s*(\S+)", text)]
+        self.assertEqual(dois, [ZENODO_CONCEPT_DOI])
         self.assertIn("arXiv preprint", text)
         try:
             import yaml
@@ -444,7 +468,117 @@ class TestLicenceFiles(unittest.TestCase):
         for a in data["authors"]:
             self.assertIn("Cornell University", a["affiliation"])
             self.assertNotIn("email", a)
-        self.assertEqual(data["authors"][0]["orcid"], "https://orcid.org/0009-0007-5125-4958")
+        for a in data["authors"]:
+            self.assertEqual(a["orcid"], "https://orcid.org/" + ORCIDS[(a["given-names"], a["family-names"])])
+        self.assertEqual(str(data["version"]), _package_version())
+        self.assertRegex(str(data["date-released"]), r"^\d{4}-\d{2}-\d{2}$")
+        # the top-level DOI is the concept DOI; the identifiers list it and the archived version DOIs
+        self.assertEqual(data["doi"], ZENODO_CONCEPT_DOI)
+        ids = [(i["type"], str(i["value"])) for i in data["identifiers"]]
+        self.assertEqual(ids, [("doi", ZENODO_CONCEPT_DOI)]
+                         + [("doi", d) for d in ZENODO_VERSION_DOIS.values()])
+        for ident in data["identifiers"]:
+            self.assertTrue(ident.get("description"))
+        for version, doi in ZENODO_VERSION_DOIS.items():
+            desc = next(i["description"] for i in data["identifiers"] if i["value"] == doi)
+            self.assertIn(f"Version {version}", desc)
+
+
+def _package_version() -> str:
+    m = re.search(r'(?m)^__version__ = "([^"]+)"$', _read("openveil/__init__.py"))
+    return m.group(1)
+
+
+class TestReleaseMetadata(unittest.TestCase):
+    """Zenodo reads .zenodo.json in preference to CITATION.cff, so the two must agree."""
+
+    def test_zenodo_json(self):
+        import json
+        data = json.loads(_read(".zenodo.json"))
+        self.assertEqual(data["upload_type"], "software")
+        self.assertEqual(data["version"], _package_version())
+        self.assertEqual(data["license"], "apache-2.0")
+        self.assertRegex(data["publication_date"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertEqual([c["name"] for c in data["creators"]], ["Yang, Haiyu", "Hostens, Miel"])
+        for c in data["creators"]:
+            family, given = c["name"].split(", ")
+            self.assertEqual(c["orcid"], ORCIDS[(given, family)])
+            self.assertIn("Cornell University", c["affiliation"])
+        self.assertNotIn("doi", data)                  # Zenodo assigns the DOI at release
+        self.assertNotIn("prereserve_doi", data)
+        ids = {r["identifier"]: r for r in data["related_identifiers"]}
+        self.assertEqual(ids["10.57967/hf/11689"]["scheme"], "doi")
+        self.assertEqual(ids["arXiv:2611.21706"]["scheme"], "arxiv")
+        self.assertEqual(ids["https://huggingface.co/" + WEIGHTS_REPO]["scheme"], "url")
+
+    def test_zenodo_json_matches_citation_cff(self):
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("PyYAML is not installed")
+        import json
+        cff = yaml.safe_load(_read("CITATION.cff"))
+        zen = json.loads(_read(".zenodo.json"))
+        self.assertEqual(zen["title"], cff["title"])
+        self.assertEqual(zen["version"], str(cff["version"]))
+        self.assertEqual(zen["publication_date"], str(cff["date-released"]))
+        self.assertEqual(zen["keywords"], cff["keywords"])
+        self.assertEqual([c["name"] for c in zen["creators"]],
+                         [f"{a['family-names']}, {a['given-names']}" for a in cff["authors"]])
+        self.assertEqual([c["affiliation"] for c in zen["creators"]], [a["affiliation"] for a in cff["authors"]])
+
+    def test_zenodo_json_is_not_ignored_by_git(self):
+        gitignore = _read(".gitignore")
+        self.assertIn("!/.zenodo.json", gitignore)
+
+    def test_changelog_lists_the_current_version(self):
+        text = _read("CHANGELOG.md")
+        version = _package_version()
+        self.assertRegex(text, rf"(?m)^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}$")
+        self.assertIn(f"Version {version}", _read("README.md"))
+        # the newest entry is the current version, and it has a compare link
+        self.assertEqual(re.findall(r"(?m)^## \[([^\]]+)\]", text)[0], version)
+        self.assertRegex(text, rf"(?m)^\[{re.escape(version)}\]: https://github\.com/Sonam525/OpenVeil/compare/v\S+\.\.\.v{re.escape(version)}$")
+        # every archived version DOI is named in the changelog entry of its version
+        for v, doi in ZENODO_VERSION_DOIS.items():
+            entry = text.split(f"## [{v}]", 1)[1].split("\n## [", 1)[0]
+            self.assertIn(doi, entry)
+
+    def test_versions_agree_across_files(self):
+        version = _package_version()
+        readme, page = _read("README.md"), _read("docs/index.html")
+        self.assertIn(f"**Release:** {version} (", readme)
+        self.assertIn(f"(Version {version}) [Computer software]", readme)
+        self.assertIn(f"OpenVeil {version} ·", page)
+        self.assertIn(f"Current release: {version} (", page)
+        for rel, text in (("README.md", readme), ("docs/index.html", page)):
+            with self.subTest(file=rel):
+                entry = re.search(r"@software\{yang2026openveil,.*?\n\}", text, re.DOTALL).group(0)
+                self.assertRegex(entry, rf"(?m)^\s*version\s*=\s*\{{{re.escape(version)}\}},$")
+                self.assertRegex(entry, rf"(?m)^\s*doi\s*=\s*\{{{re.escape(ZENODO_CONCEPT_DOI)}\}},$")
+                self.assertRegex(entry, r"(?m)^\s*publisher\s*=\s*\{Zenodo\},$")
+                # no other version is named as the current one
+                for other in re.findall(r"(?:OpenVeil|Version|Release:\*\*|release:) (\d+\.\d+\.\d+)", text):
+                    self.assertEqual(other, version)
+
+    def test_concept_doi_is_cited(self):
+        doi = ZENODO_CONCEPT_DOI
+        readme = _read("README.md")
+        self.assertIn(f"[![DOI](https://zenodo.org/badge/DOI/{doi}.svg)](https://doi.org/{doi})", readme)
+        self.assertIn(f"https://doi.org/{doi}", _read("docs/index.html"))
+        self.assertIn(f"Zenodo. https://doi.org/{doi}", readme)   # the APA reference
+        for rel in ("README.md", "docs/index.html", "CITATION.cff"):
+            with self.subTest(file=rel):
+                self.assertNotRegex(_read(rel), r"(?i)DOI[^.]{0,60}\b(to be added|assigned by Zenodo at release)")
+
+    def test_zenodo_dois_are_real(self):
+        # every Zenodo DOI in the repository text is one Zenodo has assigned: no placeholders
+        for rel in DOC_FILES + OTHER_FILES + PAGE_FILES:
+            for doi in ZENODO_DOI_RE.findall(_read(rel)):
+                doi = re.sub(r"\.svg$", "", doi).rstrip(".")     # badge URL, end of sentence
+                with self.subTest(file=rel, doi=doi):
+                    self.assertRegex(doi, r"^10\.5281/zenodo\.\d+$")
+                    self.assertIn(doi, ZENODO_DOIS)
 
 
 class TestAuthorsAndWeights(unittest.TestCase):

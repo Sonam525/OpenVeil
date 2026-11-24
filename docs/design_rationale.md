@@ -2,7 +2,8 @@
 
 OpenVeil was built to release a large calf play-behaviour video dataset (see
 [case_study.md](case_study.md)). Its design is the result of about three weeks
-of trials, each measured on held-out frames. This page explains what we tried,
+of trials, each measured on labelled or human-checked frames (section 2 says
+which of them the verifier saw in training). This page explains what we tried,
 what the numbers were, and why the final pipeline is
 
 > **Grounding DINO proposes, a fine-tuned DINOv3 crop classifier verifies,
@@ -20,7 +21,7 @@ evaluation set is in [section 4](#4-comparison-table)):
 |---|---|---|---|
 | YOLO11x + OWLv2 + tracking (pilot) | 44 / 53 person events fully masked | 67% of masked area on animals or objects | Rejected |
 | Pilot + fixed privacy zones | 53 / 53 events | masks on 32.4% of all frame area | Rejected |
-| Grounding DINO alone | VAL261: 0.876 (loose) | 1.68% of the area of person-free frames (same study); in a separate evaluation (recall 0.855 IoU) 59.2% of person-free frames got a mosaic | Kept as proposer |
+| Grounding DINO alone | VAL261: 0.876 (loose) | 59.2% of person-free frames got a mosaic (4.57% of their area) | Kept as proposer |
 | LocateAnything-3B | VAL261: 0.772 | 49.3% of person-free frames; 1.99 s per frame | Rejected |
 | YOLO11l fine-tuned in-domain | VAL261: 0.634 | 4.9% of person-free frames | Rejected (recall) |
 | Grounding DINO + DINOv3 ViT-S verifier | 95% of labelled people | 47% of colour frames keep a false mosaic | Rejected |
@@ -53,9 +54,9 @@ a verifier keeps the recall of one and most of the precision of the other.
 | Name | What it is | Used for |
 |---|---|---|
 | **VAL261** | 261 validation frames from 76 pilot clips with 145 people in 119 frames. Boxes were labelled by two blind large-language-model (LLM) reviewers plus an arbiter. By body part: 48 full body, 42 lower body, 26 partial at the image edge, 26 upper body, 3 arm or hand only. The set is enriched with frames that a stock YOLO detector missed, so it is harder than everyday footage and biased against YOLO. | Person recall of detectors and of the final pipeline |
-| **ORD2000** | 2,000 unlabelled "everyday" frames mined from 118 held-out videos, sampled in strata. | Share of ordinary frames that would get a mosaic |
-| **HUM731** | 731 of the ORD2000 frames, checked by a human reviewer in the review tool: all 131 frames an earlier classifier would mask plus 600 of the other 1,869, sampled near and below that classifier's threshold. They hold 172 people in 52 frames. Results are weighted back to all 2,000 frames. | Recall and false mosaics of the final pipeline on everyday footage |
-| **Training labels** | 3,004 frames labelled by LLM reviewers: 377 frames with people, 502 person boxes; later partly corrected by a human. | Recall base for the crop-classifier trials |
+| **ORD2000** | 2,000 unlabelled "everyday" frames drawn from 118 videos that were excluded from label mining (their HUM731 crops later entered verifier training by cross-fitting), sampled in strata. | Share of ordinary frames that would get a mosaic |
+| **HUM731** | 731 of the ORD2000 frames, checked by a human reviewer in the review tool: all 131 frames an earlier classifier would mask plus 600 of the other 1,869, sampled near and below that classifier's threshold. They hold 172 people in 52 frames. The boxes were drawn while checking the pipeline's proposals, so a person missed by both the pipeline and the reviewer cannot appear here. Results are weighted back to all 2,000 frames. | Recall and false mosaics of the final pipeline on everyday footage |
+| **Training labels** | 3,004 frames labelled by LLM reviewers: 377 frames with people, 502 person boxes; later checked and corrected by a human. | Recall base for the crop-classifier trials |
 
 Metrics used below:
 
@@ -104,8 +105,10 @@ Metrics used below:
    not kept as a stored evaluation, so we do not report numbers for it). Track
    confirmation cut false mosaics only by giving up recall. Rejected.
 7. **In-domain YOLO11l**, fine-tuned on the 3,004 labelled frames. Very fast
-   and precise, but its best recall on VAL261 was 0.634. Rejected: far below
-   the 95% target.
+   and precise, but its recall on VAL261 in this trial was at most 0.634.
+   Rejected: far below the 95% target. In a later comparison under one
+   protocol it covered 126 of the 172 HUM731 people at no more false-box
+   frames than the final pipeline.
 8. **Hand-made features**: a gradient-boosted model on Grounding DINO scores,
    box geometry and colour. Better, but at 95% recall a quarter of the
    labelled colour frames still had a false positive. Rejected.
@@ -145,7 +148,7 @@ cell. "–" means not measured. Speeds are on one A10 GPU unless noted.
 | GD + DINOv3 ViT-S LoRA classifier, camera held out | AUC 0.938; 95% of labelled people | 47% of colour frames keep a false mosaic | – | Rejected |
 | GD + DINOv3 ViT-L LoRA r32, candidates ≥ 0.10 | AUC 0.984, AP 0.901; 95% of labelled people | 12.5% false-positive colour frames (GD alone: 82.5%). ORD2000: 8.4% [4.9–12.6] of frames, 0.27% area | – | Superseded |
 | GD + DINOv3 ViT-L LoRA, candidates ≥ 0.05 | AUC 0.981; 95% of labelled people | 7.2% false-positive colour frames. ORD2000: 6.6% [3.7–10.2], 0.83% area | – | Superseded by v2 |
-| **Final: GD + DINOv3 ViT-L v2, threshold 0.10, production schedule** | **HUM731: 172 / 172 people with ≥ 90% of their area under a mosaic.** VAL261: 0.862 (loose) | **HUM731: 3.3% of frames with a false box, 0.4% with a big one.** Schedule replay: 0.22% false area | 0.085 detector calls per frame in the replay (0.0508 in the real run); about 280 A10-h estimated by replay, assuming 5.9 frames/s for Grounding DINO and 160 crops/s for the classifier; classifier 276.7 crops/s measured | **Adopted** |
+| **Final: GD + DINOv3 ViT-L v2, threshold 0.10, production schedule** | **HUM731: 172 / 172 people with ≥ 90% of their area under a mosaic.** VAL261: 0.862 (loose) | **HUM731: 3.3% of frames with a false box, 0.45% with a big one.** Schedule replay: 0.22% false area | 0.085 detector calls per frame in the replay (0.0508 in the real run); about 295 A10-h estimated by replay, assuming 5.9 frames/s for Grounding DINO and 160 crops/s for the classifier; classifier 287 crops/s measured on the GPU alone, 247 end to end | **Adopted** |
 
 Square brackets are 95% confidence intervals where the trial computed them.
 "95% of labelled people" means the classifier threshold was set to keep 95% of
@@ -166,23 +169,31 @@ alarms. At 95% recall the ViT-L verifier cut false-positive colour frames from
 
 **Why DINOv3 with LoRA.** The verifier must learn a fine distinction from about
 1,400 positive crops. A large self-supervised backbone (DINOv3 ViT-L/16)
-gives strong features out of the box; LoRA (rank 32) adapts it cheaply without
-over-fitting. The smaller ViT-S backbone left a false mosaic in 47% of colour
-frames at the same recall.
+gives strong features out of the box, and LoRA (rank 32) adapts it cheaply.
+The smaller ViT-S backbone left a false mosaic in 47% of colour frames at the
+same recall. Having a verifier matters much more than which one: in a later
+ablation on the same crops (one seed each), a ViT-B adapter, a rank-8 adapter
+and a frozen ViT-L with an MLP head reached similar false-box rates. ViT-L
+with rank 32 is kept because, with cameras held out, it left far fewer false
+boxes than ViT-S; where speed matters, ViT-B is a reasonable choice.
 
 **Why the v2 model.** The final classifier was trained on tighter positive
-boxes and on labels a human had corrected in the review tool, with cross-fitting
-so that every score used for evaluation came from a model that had not seen that
-video. Its cross-fitted AUC was 0.994. On HUM731, scored by a model trained
-without those videos, every one of the 172 people was covered at the production
-threshold, and 3.3% of everyday frames had a false box. For comparison, the
-previous model needed a threshold of 0.19 and then gave 3.5% false-box frames,
-1.35% big false boxes and 1.19% mosaic area; v2 at threshold 0.12 gave 2.9%,
-0.75% and 0.97% (2.6%, 0.40% and 0.80% with the container rule).
+boxes and on labels a human had corrected, plus the HUM731 crops, with
+cross-fitting so that every HUM731 score came from a model that had not seen
+that video (but had the other half of the HUM731 videos in its training data).
+Its cross-fitted AUC was 0.994. On HUM731 every one of the 172 people was
+covered at the production threshold, and 3.3% of everyday frames had a false
+box. For comparison, with the container rule the previous model had to be
+lowered to a threshold of 0.19 to cover every HUM731 person, and then gave
+3.1% false-box frames (0.95% big); v2 covered all of them up to 0.127, with
+2.25% (0.35% big).
 
-**Why a threshold of 0.10.** On HUM731 the v2 model still covered all 172
-people at a threshold of 0.12. Production uses 0.10 for a safety margin,
-because HUM731 holds only 52 frames with people.
+**Why a threshold of 0.10.** On HUM731 the v2 model covered all 172 people up
+to a threshold of 0.127. Production uses 0.10, set during development with
+this HUM731 curve in view, so the HUM731 results are optimistic. Thresholds
+chosen without HUM731 still covered 170 to 172 of the 172 people, but their
+false-box rates ranged from 1.6% to 24.9%: set the threshold on your own
+reviewed frames.
 
 **Why the schedule.** We replayed the production schedule (1 s checkpoints,
 0.2 s dense mode after a hit, ±2 s hold) on 76 one-minute clips that the final
@@ -194,7 +205,7 @@ checkpoints but runs on every stored frame while it is in dense mode:
 |---|---|---|
 | VAL261 recall (loose) | 0.876 | 0.862 |
 | Detector calls per frame | 0.229 | 0.085 |
-| Estimated cost for the dataset | about 790 A10-h (547 GD + 243 classifier) | about 280 A10-h (204 GD + 75 classifier) |
+| Estimated cost for the dataset | about 790 A10-h (547 GD + 243 classifier) | about 295 A10-h (204 GD + 91 classifier) |
 
 The costs assume 5.9 frames/s for Grounding DINO end to end and 160 crops/s
 for the classifier on one A10 (the speeds the replay script uses; the measured
@@ -207,14 +218,18 @@ The schedule covered 99.4% of the boxes found on every stored frame; 2.1% of
 frames had a box that it did not cover. On the real dataset
 the schedule needed only 0.0508 calls per frame (with the `clock` policy,
 sparse at night), because most footage has no people; at the same assumed
-speed that is roughly 120 Grounding DINO hours. Note that the replay measures the schedule against the model, not
-against people, and the night schedule was not tested this way.
+speed that is about 122 Grounding DINO hours. Note that the replay measures the
+schedule against the model, not against people. At night (12 clips, little
+evidence: one validation person), the case-study 5 s sparse scan covered 82.2%
+of the boxes of a dense scan, against 94.9% at 1 s and 97.4% for the day
+schedule, which OpenVeil uses by default.
 
 **Why per-frame rules and interpolation.** Duplicate boxes (IoU ≥ 0.85) and
 loose "container" boxes around a group are common outputs of open-vocabulary
-detectors. The two rules are simple and apply per frame. At threshold 0.12 the
-container rule lowered big false boxes from 0.75% to 0.40% of everyday frames
-on HUM731.
+detectors. The two rules are simple and apply per frame. At the production
+threshold the container rule lowered big false boxes from 0.80% to 0.45% of
+everyday frames on HUM731, without changing coverage; it was chosen with
+HUM731 in view.
 Interpolation bridges the gaps that caused most misses in the first pilot.
 
 ## 6. The giant rule
@@ -278,10 +293,12 @@ evaluation set. In particular:
 - **`person.` alone**: 0.455 recall at 0.88% area (stored phrase-study table).
 - **In-domain YOLO11l with a frozen backbone, ORD2000**: 2.85% of frames at
   confidence 0.05.
-- **Previous classifier at threshold 0.19 on HUM731**: 3.5% / 1.35% / 1.19%
-  (re-run of the evaluation script).
+- **Previous classifier at threshold 0.19 on HUM731**: 3.1% false-box frames,
+  0.95% big, 0.53% false area, with the container rule (later re-run). An
+  earlier evaluation recorded 3.5% / 1.35% / 1.19%.
 - **Giant rule at 0.40**: worst covers 0.194 and 0.247 (re-run of the check).
-- **Cost**: about 280 A10-h is the schedule-replay estimate. The actual billed
+- **Cost**: about 295 A10-h (204 GD + 91 classifier) is the schedule-replay
+  estimate; an earlier note gave about 280 (75 classifier hours). The actual billed
   GPU hours were not recorded, so no measured cost is given. The 820.7
   node-hours of pilot 2 is a projection for a different pipeline.
 - **Dataset totals**: 1,173 videos (two unplayable files were removed from an

@@ -32,7 +32,8 @@ venv/
 *.[tT][mM][pP]
 
 # Box tables, scores and results: they carry source video names and times.
-# Plain .json is ignored everywhere except under configs/ and docs/.
+# Plain .json is ignored everywhere except under configs/ and docs/ and the
+# Zenodo release metadata (.zenodo.json) in the repository root.
 *.[jJ][sS][oO][nN]
 *.[jJ][sS][oO][nN][lL]
 *.[jJ][sS][oO][nN].[gG][zZ]
@@ -50,6 +51,7 @@ venv/
 *.[sS][qQ][lL][iI][tT][eE]
 !/configs/**/*.json
 !/docs/**/*.json
+!/.zenodo.json
 summary.json
 failed/
 workers/

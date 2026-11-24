@@ -36,7 +36,7 @@
 
 <section id="overview" class="hero">
   <div class="hero-text">
-    <p class="eyebrow">OpenVeil 0.1.0 · arXiv preprint forthcoming</p>
+    <p class="eyebrow">OpenVeil 1.1.0 · arXiv preprint forthcoming</p>
     <h1>Share your video dataset, not the people in it</h1>
     <p class="sub"><strong>OpenVeil</strong>: detect, verify and mosaic people in video datasets before release, with an interactive human review tool.</p>
     <p class="lead">Footage of animals, farms, labs or streets often shows staff, visitors or bystanders who could be recognised, and that blocks open release. OpenVeil errs on the side of finding every person, lets a human check the hard frames, and mosaics them while touching as little of the footage as possible.</p>
@@ -105,7 +105,7 @@
     <thead><tr><th>Measure</th><th class="n">Result</th><th>Evaluation set</th></tr></thead>
     <tbody>
       <tr class="strong"><td>People covered (≥ 90 % of their area under a mosaic)</td><td class="n">172 / 172</td><td>HUM731</td></tr>
-      <tr class="strong"><td>Frames with a false mosaic box</td><td class="n">3.3 %</td><td>HUM731 (0.4 % with a big one, ≥ 15 % of the image)</td></tr>
+      <tr class="strong"><td>Frames with a false mosaic box</td><td class="n">3.3 %</td><td>HUM731 (0.45 % with a big one, ≥ 15 % of the image)</td></tr>
       <tr><td>Recall on hard validation frames, loose matching</td><td class="n">0.862</td><td>VAL261, full pipeline, production schedule</td></tr>
       <tr><td>False mosaic area</td><td class="n">0.22 %</td><td>VAL261, schedule replay</td></tr>
       <tr><td>Detector calls per frame</td><td class="n">0.0508</td><td>Whole dataset, <code>clock</code> day/night policy</td></tr>
@@ -115,7 +115,7 @@
       <tr><td>Human review, median per frame</td><td class="n">0.6 s</td><td>3,194 frames in about 2.4 h</td></tr>
     </tbody>
   </table></div>
-  <p class="note">Loose matching counts a person as found if any mosaic box matches (IoU ≥ 0.5) a box drawn on any part of them. VAL261 is scored by the released model, whose training data include other minutes of most of the same videos, so it is not a held-out estimate; HUM731 is scored by a model trained without its videos.</p>
+  <p class="note">Loose matching counts a person as found if any mosaic box matches (IoU ≥ 0.5) a box drawn on any part of them. VAL261 is scored by the released model, whose training data include other minutes of most of the same videos, so it is not a held-out estimate; HUM731 is not held out either: each frame was scored by a model that had not seen its video but was trained on the other half of the HUM731 videos (cross-fitting), its boxes were drawn while checking the pipeline's proposals, so a person missed by both the pipeline and the reviewer cannot appear in it, and the 0.10 threshold was set with HUM731 in view. Its full coverage therefore holds partly by construction.</p>
 
   <h3>Why a cascade</h3>
   <p>Open-vocabulary detectors find people in odd poses but cannot tell a crouching worker from a calf; detectors trained on the target data are precise but miss people. A proposer plus a strong crop classifier keeps the recall of one and most of the precision of the other.</p>
@@ -124,7 +124,7 @@
     <tbody>
       <tr><td>YOLO11x + OWLv2 + tracking (pilot)</td><td>44 / 53 person events fully masked</td><td>67 % of masked area on animals or objects</td><td>Rejected</td></tr>
       <tr><td>Pilot + fixed privacy zones</td><td>53 / 53 events</td><td>Masks on 32.4 % of all frame area</td><td>Rejected</td></tr>
-      <tr><td>Grounding DINO alone</td><td>VAL261: 0.876 (loose)</td><td>1.68 % of the area of person-free frames; in a separate evaluation 59.2 % of person-free frames got a mosaic</td><td>Kept as proposer</td></tr>
+      <tr><td>Grounding DINO alone</td><td>VAL261: 0.876 (loose)</td><td>59.2 % of person-free frames got a mosaic (4.57 % of their area)</td><td>Kept as proposer</td></tr>
       <tr><td>LocateAnything-3B</td><td>VAL261: 0.772</td><td>49.3 % of person-free frames; 1.99 s per frame</td><td>Rejected</td></tr>
       <tr><td>YOLO11l fine-tuned in-domain</td><td>VAL261: 0.634</td><td>4.9 % of person-free frames</td><td>Rejected (recall)</td></tr>
       <tr><td>Grounding DINO + DINOv3 ViT-S verifier</td><td>95 % of labelled people</td><td>47 % of colour frames keep a false mosaic</td><td>Rejected</td></tr>
@@ -232,16 +232,19 @@ snapshot_download("Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16",
 </section>
 
 <section id="cite">
-  <h2>Citation</h2>
-  <p>An arXiv preprint is forthcoming. Until then, please cite the software (<a href="https://github.com/Sonam525/OpenVeil/blob/main/CITATION.cff">CITATION.cff</a>):</p>
+  <h2>Citing OpenVeil</h2>
+  <p>Each OpenVeil release is archived on <a href="https://zenodo.org">Zenodo</a>, which assigns it a version DOI. Current release: 1.1.0 (2026-11-24; <a href="https://github.com/Sonam525/OpenVeil/blob/main/CHANGELOG.md">changelog</a>).</p>
+  <p><strong>DOI:</strong> <a href="https://doi.org/10.5281/zenodo.24505557">10.5281/zenodo.24505557</a>. This concept DOI cites all versions and resolves to the latest one; the version DOI of each release is on its Zenodo record. Please cite the concept DOI, or the version DOI of the version you used (<a href="https://github.com/Sonam525/OpenVeil/blob/main/CITATION.cff">CITATION.cff</a>). An arXiv preprint is forthcoming. Until then, please cite the software:</p>
 <pre><code>@software{yang2026openveil,
-  author  = {Yang, Haiyu and Hostens, Miel},
-  title   = {{OpenVeil}: Detect, verify and mosaic people in video datasets
-             before release, with an interactive human review tool},
-  version = {0.1.0},
-  year    = {2026},
-  url     = {https://github.com/Sonam525/OpenVeil},
-  license = {Apache-2.0}
+  author    = {Yang, Haiyu and Hostens, Miel},
+  title     = {{OpenVeil}: Detect, verify and mosaic people in video datasets
+               before release, with an interactive human review tool},
+  version   = {1.1.0},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24505557},
+  url       = {https://github.com/Sonam525/OpenVeil},
+  license   = {Apache-2.0}
 }
 
 @misc{simeoni2025dinov3,
@@ -286,7 +289,7 @@ snapshot_download("Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16",
     <li>If you use the verifier weights, please also cite DINOv3 (arXiv:2508.10104, second entry above); the DINOv3 License requires acknowledging it.</li>
     <li>Case-study data: the <a href="https://huggingface.co/datasets/Sonam5/Calf-Play-Behavior-Dataset">Calf Play Behavior Dataset</a>, version 1.2 (the masked release, made with OpenVeil; DOI <a href="https://doi.org/10.57967/hf/11689">10.57967/hf/11689</a>), described in a data descriptor (<a href="https://arxiv.org/abs/2611.21706">arXiv:2611.21706</a>, under review at Scientific Data). Third and fourth entries above.</li>
   </ul>
-  <p class="authors">Haiyu Yang (<a href="https://orcid.org/0009-0007-5125-4958">ORCID 0009-0007-5125-4958</a>) and Miel Hostens, Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA.</p>
+  <p class="authors">Haiyu Yang (<a href="https://orcid.org/0009-0007-5125-4958">ORCID 0009-0007-5125-4958</a>) and Miel Hostens (<a href="https://orcid.org/0000-0001-5376-976X">ORCID 0000-0001-5376-976X</a>), Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA.</p>
 </section>
 
 </main>

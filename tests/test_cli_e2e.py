@@ -425,7 +425,7 @@ class SmokeTest(unittest.TestCase):
     def test_help_and_version(self):
         code, out = run_cli("--version")
         self.assertEqual(code, 0)
-        self.assertIn("openveil 0.1.0", out)
+        self.assertIn("openveil 1.1.0", out)
         code, out = run_cli()
         self.assertEqual(code, 2)
         self.assertIn("detect", out)
@@ -452,7 +452,7 @@ class SmokeTest(unittest.TestCase):
         r = subprocess.run([sys.executable, "-B", "-m", "openveil", "--version"], cwd=ROOT, capture_output=True,
                            text=True, timeout=120)
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertIn("openveil 0.1.0", r.stdout)
+        self.assertIn("openveil 1.1.0", r.stdout)
 
     def test_import_is_light(self):
         code = ("import sys, openveil.cli; heavy = [m for m in ('av', 'torch', 'cv2', 'PIL', 'scipy', 'yaml', "

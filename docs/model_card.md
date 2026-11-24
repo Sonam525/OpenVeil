@@ -97,8 +97,9 @@ false mosaics), or train your own verifier with the `openveil.train` package.
 - **Table**: 50,756 candidate crops, of which 1,444 are positives (people);
   negatives are calves, cows, objects and background.
 - **Labels**: person boxes pre-labelled by large-language-model (LLM) reviewers
-  (two blind reviewers plus an arbiter), then partly checked and corrected by a
-  human in the OpenVeil review tool. Positives are crops that tightly match a
+  (two blind reviewers plus an arbiter), then checked and corrected by a
+  human, partly in the OpenVeil review tool. The candidates of the 731
+  human-boxed HUM731 frames were added by cross-fitting (see below). Positives are crops that tightly match a
   labelled person.
 - **People in the data**: barn staff and visitors, mostly in work clothes and
   boots, often partly hidden by pen walls. Colour footage by day, infrared at
@@ -119,28 +120,34 @@ false mosaics), or train your own verifier with the `openveil.train` package.
 | Head hidden size | 1024 |
 | Training dtype / quantisation | bfloat16 / none |
 | Seed | 0 |
-| Training time | 35 min on one NVIDIA A10 (8 epochs, about 65 crops/s in training; 168.7 crops/s when scoring) |
+| Training time | 35 min on one NVIDIA A10 (8 epochs, about 65 crops/s in training) |
 
-Evaluation used **cross-fitting**: the data were split by video into two halves,
-and each half was scored by a model trained on the other. The released model
-was then trained on all data.
+Evaluation used **cross-fitting** over the HUM731 videos: they were split into
+two halves, and each half was scored by a model trained on all training-label
+crops plus the HUM731 crops of the other half. The released model was then
+trained on all crops, so it has no held-out estimate.
 
 ## Evaluation
 
 | Evaluation | Result |
 |---|---|
 | Cross-fitted ROC AUC (person vs not person, all candidates) | **0.994** |
-| HUM731: 731 human-checked everyday frames (172 people in 52 frames), scored by a model trained without their videos, at threshold 0.10 with the duplicate and container rules | **172 / 172** people with ≥ 90% of their area under a mosaic |
-| HUM731 weighted to the 2,000 sampled everyday frames, threshold 0.10 | **3.3%** of frames with a false box, **0.4%** with a big one (≥ 15% of the image) |
-| HUM731 at threshold 0.12 (without / with container rule) | false-box frames 2.9% / 2.6%; big false boxes 0.75% / 0.40%; mosaic area 0.97% / 0.80% |
+| HUM731: 731 human-checked everyday frames (172 people in 52 frames), scored by cross-fitted models (see the caveats below), at threshold 0.10 with the duplicate and container rules | **172 / 172** people with ≥ 90% of their area under a mosaic |
+| HUM731 weighted to the 2,000 sampled everyday frames, threshold 0.10 | **3.3%** of frames with a false box, **0.45%** with a big one (≥ 15% of the image) |
+| HUM731 at 0.127, the highest threshold still covering all 172 people (chosen on HUM731), with the container rule | false-box frames 2.25%; big false boxes 0.35%; false area 0.32% |
 | VAL261: 261 hard validation frames (145 people), full pipeline with the production schedule (replay), scored by the released model | recall 0.862 (loose matching: a person counts as found if any mosaic box matches a box drawn on any part of them); false mosaic area 0.22%. Not a held-out estimate: the released model's training data include other minutes of most of the same source videos (no overlapping frames) |
-| Speed, one A10, bf16, LoRA merged | 276.7 crops/s (191.8 crops/s including CPU crop preparation) |
+| Speed, one A10, bf16, LoRA merged | 287 crops/s on the GPU alone; 247 crops/s end to end, including JPEG decoding and crop preparation |
 
 How these sets were built, and how the verifier compares with the alternatives
 we tried, is described in [design_rationale.md](design_rationale.md).
 
 **Caveats of the evaluation**
 
+- HUM731 is not a held-out test. Its boxes were drawn while checking the
+  pipeline's proposals, so it cannot contain a person missed by both the
+  pipeline and the reviewer; each scoring model had the other half of the
+  HUM731 videos in its training data; and the 0.10 threshold and the
+  container rule were chosen with HUM731 in view. The results are optimistic.
 - HUM731 contains only 52 frames with people, all in colour. None of the 217
   infrared frames checked contained a person, so **recall on infrared footage
   is unknown**.
@@ -205,7 +212,8 @@ model; it is not a held-out evaluation.
 - **Prompt.** The verifier was trained on candidates of the prompt
   `worker. person. cow. calf.` (OpenVeil's default). With another prompt, for
   example one naming other animals, it sees different candidates; re-check it.
-- **Threshold.** 0.10 was chosen for recall on this domain; re-check it on yours.
+- **Threshold.** 0.10 was chosen for recall on this domain, with the HUM731
+  results in view; re-check it on yours.
 - **Partial and small people.** Legs or boots behind walls, arms at the edge and
   distant figures are the hardest cases; they are where misses are most likely.
 - **Night.** Untested on infrared footage with people (see above).
@@ -256,7 +264,7 @@ training a model on its output.
 ## Citation
 
 See [`CITATION.cff`](../CITATION.cff) and the
-[README](../README.md#citation). An arXiv preprint is forthcoming. Please also
+[README](../README.md#citing-openveil). An arXiv preprint is forthcoming. Please also
 cite DINOv3:
 
 ```bibtex

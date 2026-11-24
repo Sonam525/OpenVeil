@@ -1,9 +1,13 @@
 cff-version: 1.2.0
 message: >-
-  If you use OpenVeil, please cite it as below. An arXiv preprint describing
-  OpenVeil is forthcoming; this file will be updated with its reference when
-  it is available. No DOI has been assigned to OpenVeil yet. The references
-  below are the case-study dataset and its data descriptor.
+  If you use OpenVeil, please cite it as below. Each release is archived on
+  Zenodo. The concept DOI 10.5281/zenodo.24505557 cites all versions and
+  always resolves to the latest one; to cite a specific version, use the
+  version DOI shown on the Zenodo record of the version you used (the version
+  DOI of 1.1.0 appears on Zenodo after its release). An arXiv preprint
+  describing OpenVeil is forthcoming; this file will be updated with its
+  reference when it is available. The references below are the case-study
+  dataset, its data descriptor and the crop verifier weights.
 type: software
 title: "OpenVeil: Detect, verify and mosaic people in video datasets before release, with an interactive human review tool"
 abstract: >-
@@ -20,8 +24,17 @@ authors:
   - given-names: Miel
     family-names: Hostens
     affiliation: "Department of Animal Science, College of Agriculture and Life Sciences, Cornell University, Ithaca, NY, USA"
-version: 0.1.0
-date-released: "2026-11-16"
+    orcid: "https://orcid.org/0000-0001-5376-976X"
+version: "1.1.0"
+date-released: "2026-11-24"
+doi: 10.5281/zenodo.24505557
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.24505557
+    description: "Concept DOI: all versions of OpenVeil (resolves to the latest version)"
+  - type: doi
+    value: 10.5281/zenodo.24505558
+    description: "Version 1.0.0: archive of commit 16d1513, superseded by 1.1.0"
 license: Apache-2.0
 repository-code: "https://github.com/Sonam525/OpenVeil"
 url: "https://github.com/Sonam525/OpenVeil"
@@ -74,3 +87,16 @@ references:
         value: "arXiv:2611.21706"
         description: "arXiv preprint (cs.CV); data descriptor of the case-study dataset, under review at Scientific Data"
     url: "https://arxiv.org/abs/2611.21706"
+  - type: generic
+    title: "OpenVeil-Verifier-DINOv3-ViT-L16: crop verifier weights for OpenVeil (LoRA adapter and MLP head on DINOv3 ViT-L/16)"
+    authors:
+      - given-names: Haiyu
+        family-names: Yang
+      - given-names: Miel
+        family-names: Hostens
+    year: 2026
+    publisher:
+      name: Hugging Face
+    repository: "https://huggingface.co/Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16"
+    url: "https://huggingface.co/Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16"
+    notes: "The verifier weights of the case study. Published separately under the DINOv3 License, not Apache-2.0, and not included in this repository. Built with DINOv3."
