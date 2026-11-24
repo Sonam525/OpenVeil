@@ -6,14 +6,11 @@
 # preset are listed; everything else comes from the preset.
 #
 #   openveil detect videos/ --out tables/ --config configs/example_barn.yaml
+#
+# The case-study prompt "worker. person. cow. calf." (positive phrases worker and person,
+# competitors cow and calf) is the preset's default, so it is not repeated here. What this file
+# adds is the verifier weights and the camera-clock night policy that the case study used.
 preset: production
-
-proposer:
-  # Naming the animals in the prompt gives the model somewhere else to put them, so a calf is
-  # less often scored as a person. Only the positive phrases count towards a box's score.
-  prompt: "worker. person. cow. calf."
-  positive_phrases: [worker, person]
-  competitor_phrases: [cow, calf]
 
 verifier:
   # The released crop verifier weights (LoRA adapter + head, DINOv3 License; see

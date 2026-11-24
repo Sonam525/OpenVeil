@@ -78,8 +78,9 @@ What makes the footage hard for a person detector:
 ## Detection
 
 All 1,173 videos were processed with the settings of the `production` preset,
-with the `clock` day/night policy (day 06:00–23:00) and the case-study prompt
-`worker. person. cow. calf.`.
+including its default prompt `worker. person. cow. calf.`, and with the `clock`
+day/night policy (day 06:00–23:00) instead of the default `always_full`
+(`configs/example_barn.yaml`).
 
 | | Value |
 |---|---|

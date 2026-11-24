@@ -141,6 +141,8 @@ openveil verify videos/cam1.mp4 masked/cam1.mp4
 
 Every command and option, still images and tar shards, the extras, a config file and the model-free trial run: [docs/usage.md](docs/usage.md). Every setting of the `production` preset: [docs/configuration.md](docs/configuration.md).
 
+The defaults are the evaluated case-study settings, including the Grounding DINO prompt `worker. person. cow. calf.` that the verifier was trained with; only the day/night policy differs (`always_full`, a full scan day and night). The prompt names the barn animals so that they are put forward less often as people and the verifier knows them as negatives; for footage with other animals, replace `cow` and `calf` ([docs/configuration.md](docs/configuration.md)).
+
 ## Weights
 
 **Built with DINOv3.** The crop verifier of the case study, a LoRA adapter (rank 32) and an MLP head on DINOv3 ViT-L/16, is at [`Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16`](https://huggingface.co/Sonam5/OpenVeil-Verifier-DINOv3-ViT-L16) under the DINOv3 License, not Apache-2.0. The DINOv3 backbone is not included: download it yourself from Meta's gated repository. The [model card](docs/model_card.md) lists the training data, the metrics and the limits.

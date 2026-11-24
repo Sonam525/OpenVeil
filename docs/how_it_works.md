@@ -104,10 +104,15 @@ In the case study (with the `clock` policy) this schedule needed
 [Grounding DINO base](https://huggingface.co/IDEA-Research/grounding-dino-base)
 is an open-vocabulary detector: it finds boxes for the phrases in a text prompt.
 
-- **Prompt.** The generic default is `"person."`. The case study used
+- **Prompt.** The default is the case-study prompt
   `"worker. person. cow. calf."`: *worker* and *person* are **positive phrases**,
   *cow* and *calf* are **competitor phrases**. Naming the animals gives the
-  model somewhere else to put animal-shaped boxes.
+  model somewhere else to put animal-shaped boxes, and the released verifier
+  was trained on the candidates of this prompt, with the animal candidates as
+  negatives. For other footage, replace *cow* and *calf* with the animals or
+  objects that are mistaken for people there (for example
+  `"worker. person. horse."` with `competitor_phrases: [horse]`) and re-check
+  the verifier on that footage ([configuration.md](configuration.md)).
 - **Score.** A box's score is the maximum over the positive phrase groups.
 - **Input size.** Shortest edge 800 px, longest edge at most 1333 px.
 - **Speed settings.** fp16 autocast, batch 4. On a CUDA out-of-memory error the

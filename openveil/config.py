@@ -14,9 +14,9 @@ A config file (YAML or JSON) mirrors :func:`to_dict`. It may name the preset it 
 
     preset: production
     proposer:
-      prompt: "worker. person. cow. calf."
+      prompt: "worker. person. horse."
       positive_phrases: [worker, person]
-      competitor_phrases: [cow, calf]
+      competitor_phrases: [horse]
     schedule:
       day_night:
         policy: clock
@@ -26,12 +26,12 @@ PyYAML; without it a ``.yaml`` file that is written as JSON (YAML is a superset 
 still accepted.
 
 The 'production' preset holds the values that produced the case-study release (detection
-schedule, Grounding DINO proposer settings, crop verifier recipe, giant rule 0.55, 20%
-enlargement, +-2 s hold, mosaic grid of 1/36 of the image height, smart-cut encoder settings).
-Two values differ on purpose from the case study and are documented where they are defined:
-the day/night policy defaults to ``always_full`` (every chunk gets the full schedule; the
-camera-clock policy is an option), and the default text prompt is the generic ``"person."``
-(the case study used ``"worker. person. cow. calf."`` with cow/calf as competing phrases).
+schedule, Grounding DINO prompt ``"worker. person. cow. calf."`` and proposer settings, crop
+verifier recipe, giant rule 0.55, 20% enlargement, +-2 s hold, mosaic grid of 1/36 of the image
+height, smart-cut encoder settings), so a run with the defaults uses the evaluated
+configuration. One value differs on purpose from the case study and is documented where it is
+defined: the day/night policy defaults to ``always_full`` (every chunk gets the full schedule;
+the camera-clock policy of the case study is an option).
 """
 from __future__ import annotations
 
@@ -118,14 +118,19 @@ class ProposerConfig:
     Boxes with a score of at least ``cand_thr`` become candidates; candidates that overlap a
     better one at IoU >= ``merge_iou`` are merged into it.
 
-    The generic default prompt is ``"person."``. The case study used
-    ``"worker. person. cow. calf."`` with positive phrases worker/person and competitors
-    cow/calf (see ``configs/example_barn.yaml``).
+    The default is the case-study prompt ``"worker. person. cow. calf."`` with positive phrases
+    worker/person and competitors cow/calf: the prompt the released crop verifier was trained
+    with. It names the animals of the case-study barns so that fewer of them become candidates,
+    and the verifier learned the animal candidates of this prompt as negatives. For other
+    footage, keep the positive phrases and replace the competitors with the animals or objects
+    that are mistaken for people there (every phrase must occur in the prompt), for example
+    ``"worker. person. horse."`` with ``competitor_phrases: [horse]``; then re-check the verifier
+    on that footage, since its candidates now come from a different prompt.
     """
     model_id: str = "IDEA-Research/grounding-dino-base"
-    prompt: str = "person."
-    positive_phrases: List[str] = field(default_factory=lambda: ["person"])
-    competitor_phrases: List[str] = field(default_factory=list)
+    prompt: str = "worker. person. cow. calf."
+    positive_phrases: List[str] = field(default_factory=lambda: ["worker", "person"])
+    competitor_phrases: List[str] = field(default_factory=lambda: ["cow", "calf"])
     shortest_edge: int = 800
     longest_edge: int = 1333
     fp16: bool = True

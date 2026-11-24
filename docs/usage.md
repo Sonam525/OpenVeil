@@ -132,20 +132,30 @@ all other members stay byte-identical, with their names and order.
 ## A config file
 
 A config file lists only what differs from the preset. This is the case-study
-setup (see also `configs/example_barn.yaml`):
+setup (see also `configs/example_barn.yaml`); its prompt
+`"worker. person. cow. calf."` is already the preset's default, the prompt the
+released verifier was trained with:
 
 ```yaml
 preset: production
-proposer:
-  prompt: "worker. person. cow. calf."
-  positive_phrases: [worker, person]
-  competitor_phrases: [cow, calf]
 verifier:
   adapter_dir: weights/OpenVeil-Verifier-DINOv3-ViT-L16                    # the downloaded weights
   head_path: weights/OpenVeil-Verifier-DINOv3-ViT-L16/head.safetensors
 schedule:
   day_night:
     policy: clock          # day 06:00-23:00 by the camera clock, sparse at night
+```
+
+The default prompt names calves and cows so that Grounding DINO puts fewer of
+them forward as people, and the verifier learned them as negatives. For other
+footage, replace them with what is mistaken for people there and re-check the
+verifier on your own frames:
+
+```yaml
+proposer:
+  prompt: "worker. person. horse."
+  positive_phrases: [worker, person]
+  competitor_phrases: [horse]
 ```
 
 ## Verifier weights

@@ -128,7 +128,9 @@ class GroundingDinoProposer:
     Parameters
     ----------
     prompt, positive_phrases, competitor_phrases
-        See the module docstring. Defaults: ``"person."`` with positive ``["person"]``.
+        See the module docstring. Defaults: the case-study prompt ``"worker. person. cow. calf."``
+        (the one the released verifier was trained with) with positive ``["worker", "person"]``
+        and competitor ``["cow", "calf"]``.
     model_id
         Hugging Face id or local folder (default ``IDEA-Research/grounding-dino-base``).
     shortest_edge, longest_edge
@@ -143,8 +145,8 @@ class GroundingDinoProposer:
         Threads that run the image processor in parallel.
     """
 
-    def __init__(self, prompt: str = "person.", positive_phrases: Sequence[str] = ("person",),
-                 competitor_phrases: Sequence[str] = (), model_id: str = DEFAULT_MODEL, shortest_edge: int = 800,
+    def __init__(self, prompt: str = "worker. person. cow. calf.", positive_phrases: Sequence[str] = ("worker", "person"),
+                 competitor_phrases: Sequence[str] = ("cow", "calf"), model_id: str = DEFAULT_MODEL, shortest_edge: int = 800,
                  longest_edge: int = 1333, cand_thr: float = 0.05, device: str = "cuda", dtype: str = "float16",
                  batch: int = 4, prep_threads: int = 4, detailed: bool = False):
         self.prompt = prompt.strip()

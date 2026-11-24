@@ -29,7 +29,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual((s.day_night.policy, s.day_night.day_start, s.day_night.day_end, s.day_night.night_mode, s.day_night.margin_s),
                          ("always_full", 6.0, 23.0, "sparse", 300.0))
         p = cfg.proposer
-        self.assertEqual((p.model_id, p.prompt, p.positive_phrases, p.competitor_phrases), ("IDEA-Research/grounding-dino-base", "person.", ["person"], []))
+        self.assertEqual((p.model_id, p.prompt, p.positive_phrases, p.competitor_phrases), ("IDEA-Research/grounding-dino-base", "worker. person. cow. calf.", ["worker", "person"], ["cow", "calf"]))
         self.assertEqual((p.shortest_edge, p.longest_edge, p.fp16, p.batch, p.cand_thr, p.merge_iou), (800, 1333, True, 4, 0.05, 0.6))
         v = cfg.verifier
         self.assertEqual((v.backbone_id, v.size, v.pad, v.resize_width, v.jpeg_quality, v.threshold),

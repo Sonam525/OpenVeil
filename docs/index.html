@@ -192,6 +192,7 @@ openveil review export review/ --overrides overrides.json
 openveil apply video videos/cam1.mp4 --table tables/cam1.json.gz \
     --out masked/cam1.mp4 --overrides overrides.json
 openveil verify videos/cam1.mp4 masked/cam1.mp4</code></pre>
+  <p>The defaults are the evaluated case-study settings, including the Grounding DINO prompt <code>worker. person. cow. calf.</code> that the verifier was trained with; only the day/night policy differs (a full scan day and night). The prompt names the barn animals so that they are put forward less often as people and the verifier knows them as negatives; for footage with other animals, replace <code>cow</code> and <code>calf</code>.</p>
   <p class="note">Every command, still images and tar shards, a config file and the model-free trial run: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/usage.md">docs/usage.md</a>. Every setting: <a href="https://github.com/Sonam525/OpenVeil/blob/main/docs/configuration.md">docs/configuration.md</a>.</p>
 </section>
 

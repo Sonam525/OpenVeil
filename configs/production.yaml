@@ -29,9 +29,14 @@ schedule:                       # which frames the detector sees
 
 proposer:                       # Grounding DINO: proposes candidate boxes for a text prompt
   model_id: IDEA-Research/grounding-dino-base
-  prompt: "person."
-  positive_phrases: [person]    # phrases whose score counts
-  competitor_phrases: []        # phrases that only absorb animals or objects
+  # The case-study prompt, the one the released verifier was trained with. It names the barn
+  # animals so that fewer of them become candidates, and the verifier learned the animal
+  # candidates of this prompt as negatives. For other footage keep the positive phrases and
+  # replace cow and calf with what is mistaken for people there, for example
+  # "worker. person. horse." with competitor_phrases: [horse]; then re-check the verifier.
+  prompt: "worker. person. cow. calf."
+  positive_phrases: [worker, person]   # phrases whose score counts
+  competitor_phrases: [cow, calf]      # phrases that only absorb animals or objects (not scored)
   shortest_edge: 800
   longest_edge: 1333
   fp16: true

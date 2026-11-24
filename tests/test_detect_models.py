@@ -87,7 +87,13 @@ class TestPhrases(unittest.TestCase):
         self.assertEqual((p.dtype, p.batch, p.cand_thr, p.device), ("float32", 2, 0.07, "cpu"))
         self.assertEqual(p.model_id, "IDEA-Research/grounding-dino-base")
         self.assertEqual((p.shortest_edge, p.longest_edge), (800, 1333))
-        self.assertEqual(P.make_proposer(ProposerConfig()).prompt, "person.")
+        # the default is the case-study prompt, the one the released verifier was trained with
+        d = P.make_proposer(ProposerConfig())
+        self.assertEqual((d.prompt, d.positive_phrases, d.competitor_phrases),
+                         ("worker. person. cow. calf.", ["worker", "person"], ["cow", "calf"]))
+        g = P.GroundingDinoProposer()
+        self.assertEqual((g.prompt, g.positive_phrases, g.competitor_phrases),
+                         (d.prompt, d.positive_phrases, d.competitor_phrases))
 
 
 class TestCropGeometry(unittest.TestCase):
@@ -326,7 +332,8 @@ class TestModelLoading(unittest.TestCase):
     def test_proposer_loads_and_runs(self):
         os.environ.setdefault("HF_HUB_OFFLINE", "1")
         try:
-            p = P.GroundingDinoProposer(prompt="person.", device="cpu", dtype="float32").load()
+            p = P.GroundingDinoProposer(prompt="person.", positive_phrases=["person"], competitor_phrases=[],
+                                        device="cpu", dtype="float32").load()
         except OSError as e:
             self.skipTest(f"Grounding DINO weights are not cached locally: {e}")
         out = p([np.zeros((240, 320, 3), np.uint8)])

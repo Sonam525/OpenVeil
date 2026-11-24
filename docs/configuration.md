@@ -1,7 +1,8 @@
 # Configuration reference
 
 How to write a config file is shown in [usage.md](usage.md#a-config-file);
-`configs/example_barn.yaml` is the case-study setup.
+`configs/example_barn.yaml` is the case-study setup (the preset plus the
+verifier weights and the camera-clock night policy).
 
 Production values (the `production` preset). Print them all with
 `openveil config show --preset production`; `configs/production.yaml` is the
@@ -33,14 +34,33 @@ an error.
 | Key | Value | Meaning |
 |---|---|---|
 | `model_id` | `IDEA-Research/grounding-dino-base` | Grounding DINO model |
-| `prompt` | `"person."` | text prompt (case study: `"worker. person. cow. calf."`) |
-| `positive_phrases` | `[person]` | phrases whose score counts (case study: worker, person) |
-| `competitor_phrases` | `[]` | phrases in the prompt that only absorb animals or objects (case study: cow, calf) |
+| `prompt` | `"worker. person. cow. calf."` | text prompt; the case-study prompt, which the released verifier was trained with (see below) |
+| `positive_phrases` | `[worker, person]` | phrases whose score counts |
+| `competitor_phrases` | `[cow, calf]` | phrases in the prompt that only absorb animals or objects; never scored |
 | `shortest_edge`, `longest_edge` | 800, 1333 | model input size (px) |
 | `fp16` | true | half-precision autocast |
 | `batch` | 4 | frames per call; halved on out-of-memory |
 | `cand_thr` | 0.05 | minimum score of a candidate |
 | `merge_iou` | 0.6 | greedy NMS between candidates (non-maximum suppression: of boxes overlapping at IoU ≥ this, keep the best) |
+
+The default prompt names the animals of the case-study barns. Grounding DINO
+then has somewhere else to put a calf or a cow, so fewer of them become
+candidates, and the released verifier was trained on the candidates of this
+prompt with the animals among them as negatives. For other footage, keep the
+positive phrases and replace the competitor phrases with the animals or objects
+that are mistaken for people there; every phrase must occur in the prompt:
+
+```yaml
+preset: production
+proposer:
+  prompt: "worker. person. horse."
+  positive_phrases: [worker, person]
+  competitor_phrases: [horse]
+```
+
+The verifier then sees candidates from a different prompt than the one it was
+trained with, so check it on your own footage (see
+[limitations.md](limitations.md)).
 
 **Verifier** (`verifier`)
 

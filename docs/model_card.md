@@ -90,7 +90,10 @@ false mosaics), or train your own verifier with the `openveil.train` package.
   not distributed.**
 - **Candidates**: Grounding DINO with the prompt `worker. person. cow. calf.`,
   every box with a worker/person score ≥ 0.05, greedy NMS at IoU 0.6. This is
-  the same candidate rule as at inference time.
+  the same candidate rule as at inference time, and the prompt is OpenVeil's
+  default (`proposer.prompt`). The animal candidates of this prompt are among
+  the negatives; with a different prompt the verifier sees different
+  candidates, so check it on your footage.
 - **Table**: 50,756 candidate crops, of which 1,444 are positives (people);
   negatives are calves, cows, objects and background.
 - **Labels**: person boxes pre-labelled by large-language-model (LLM) reviewers
@@ -199,6 +202,9 @@ model; it is not a held-out evaluation.
 - **Domain.** Trained only on calf-barn footage. On other scenes (streets,
   offices, fields, other animals) expect lower recall and more false alarms;
   check it with the review tool and retrain if needed.
+- **Prompt.** The verifier was trained on candidates of the prompt
+  `worker. person. cow. calf.` (OpenVeil's default). With another prompt, for
+  example one naming other animals, it sees different candidates; re-check it.
 - **Threshold.** 0.10 was chosen for recall on this domain; re-check it on yours.
 - **Partial and small people.** Legs or boots behind walls, arms at the edge and
   distant figures are the hardest cases; they are where misses are most likely.
