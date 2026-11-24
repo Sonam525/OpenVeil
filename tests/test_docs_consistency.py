@@ -63,7 +63,7 @@ ORCIDS = {("Haiyu", "Yang"): "0009-0007-5125-4958", ("Miel", "Hostens"): "0000-0
 # version DOI of a release, a docs-only commit adds it here, to the CITATION.cff identifiers
 # (after the ones already listed) and to that version's CHANGELOG entry; the tests require all three.
 ZENODO_CONCEPT_DOI = "10.5281/zenodo.24505557"
-ZENODO_VERSION_DOIS = {"1.0.0": "10.5281/zenodo.24505558"}
+ZENODO_VERSION_DOIS = {"1.0.0": "10.5281/zenodo.24505558", "1.1.0": "10.5281/zenodo.24506134"}
 ZENODO_DOIS = {ZENODO_CONCEPT_DOI, *ZENODO_VERSION_DOIS.values()}
 ZENODO_DOI_RE = re.compile(r"10\.5281/zenodo\.[^\s\"'`)\]}<>,;]*")
 

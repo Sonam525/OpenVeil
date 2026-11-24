@@ -35,6 +35,9 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.24505558
     description: "Version 1.0.0: archive of commit 16d1513, superseded by 1.1.0"
+  - type: doi
+    value: 10.5281/zenodo.24506134
+    description: "Version 1.1.0"
 license: Apache-2.0
 repository-code: "https://github.com/Sonam525/OpenVeil"
 url: "https://github.com/Sonam525/OpenVeil"

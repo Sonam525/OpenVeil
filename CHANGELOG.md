@@ -8,9 +8,10 @@ All notable changes to OpenVeil are listed here. The format follows
 
 The corrected release. It supersedes 1.0.0, which was published from an
 earlier commit before these changes were pushed. Each release is archived on
-Zenodo, which assigns it a version DOI; the concept DOI
-[10.5281/zenodo.24505557](https://doi.org/10.5281/zenodo.24505557) cites all
-versions. See [Citing OpenVeil](README.md#citing-openveil).
+Zenodo, which assigns it a version DOI; this release is
+[10.5281/zenodo.24506134](https://doi.org/10.5281/zenodo.24506134), and the
+concept DOI [10.5281/zenodo.24505557](https://doi.org/10.5281/zenodo.24505557)
+cites all versions. See [Citing OpenVeil](README.md#citing-openveil).
 
 ### What 1.1.0 contains
 
