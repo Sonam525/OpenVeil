@@ -16,6 +16,9 @@ These tests read only the repository's own text files. They check that
   and, where the value is a plain number, matches the ``production`` preset;
 * the drawn figures are up to date with ``figures/make_figures.py``, accessible,
   copied unchanged to ``docs/assets/`` and not ignored by git;
+* the screen recording of the review demo is referenced where it is shown, listed in
+  ``docs/img/README.md``, not ignored by git and free of metadata;
+* the earlier code names of the frame sets do not come back into the documentation;
 * LICENSE is the full Apache-2.0 text, CITATION.cff is well formed, and the release metadata
   (CITATION.cff, .zenodo.json, CHANGELOG.md) agree with the package version and each other.
 """
@@ -46,6 +49,12 @@ OTHER_FILES = ["LICENSE", "NOTICE", "CITATION.cff", ".zenodo.json"]
 PAGE_FILES = ["docs/index.html", "docs/style.css", "docs/site.js"]
 FIGURES = ["banner.svg", "pipeline.svg", "pipeline_narrow.svg"]
 FIGURE_FILES = [f"figures/{n}" for n in FIGURES] + [f"docs/assets/{n}" for n in FIGURES]
+# The screen recording of the review tool on its synthetic demo, and the script that makes it.
+RECORDING_FILES = ["docs/img/review_demo.mp4", "docs/img/review_demo.gif", "docs/img/review_demo_poster.png"]
+RECORDING_SCRIPT = "figures/record_review_demo.py"
+# Code names that earlier versions of the documentation used for the test set, the validation set and
+# the everyday sample. The documentation names the sets in plain words, as the paper does.
+OLD_SET_NAMES = ["HUM" + "731", "VAL" + "261", "ORD" + "2000"]
 CONFIG_REFERENCE = "docs/configuration.md"
 
 # Private data-source and account names are not stored in the repository, not even as
@@ -149,7 +158,7 @@ class TestNothingPrivate(unittest.TestCase):
         email = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
         drive_path = re.compile(r"(?<![\w])[A-Za-z]:[\\/]")
         internal = re.compile(r"/(?:d" r"bfs|mnt|Workspace|local_" r"disk0)/", re.IGNORECASE)
-        for rel in DOC_FILES + OTHER_FILES + PAGE_FILES + FIGURE_FILES + ["figures/make_figures.py"]:
+        for rel in DOC_FILES + OTHER_FILES + PAGE_FILES + FIGURE_FILES + ["figures/make_figures.py", RECORDING_SCRIPT]:
             text = _read(rel)
             with self.subTest(file=rel):
                 self.assertIsNone(email.search(text), f"e-mail address in {rel}")
@@ -172,6 +181,13 @@ class TestNothingPrivate(unittest.TestCase):
                     words = set(re.findall(r"[a-z0-9_]+", f.read().lower()))
                 with self.subTest(file=os.path.relpath(full, ROOT)):
                     self.assertEqual(sorted(words & private), [], "private name found")
+
+    def test_frame_sets_are_named_in_plain_words(self):
+        for rel in DOC_FILES + PAGE_FILES + FIGURE_FILES + ["figures/make_figures.py", RECORDING_SCRIPT]:
+            text = _read(rel).upper()
+            for name in OLD_SET_NAMES:
+                with self.subTest(file=rel, name=name):
+                    self.assertNotIn(name, text, "say test set, validation set or everyday sample")
 
     def test_only_public_recording_pseudonyms(self):
         for rel in DOC_FILES + PAGE_FILES + FIGURE_FILES:
@@ -260,7 +276,7 @@ class TestLinksAndImages(unittest.TestCase):
 
     def test_relative_links_resolve(self):
         link = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)\)")
-        html_attr = re.compile(r'\s(?:src|href|srcset)="([^"]+)"')
+        html_attr = re.compile(r'\s(?:src|href|srcset|poster)="([^"]+)"')
         planned = _read(PLANNED_IMAGES_README)
         for rel in DOC_FILES:
             text = re.sub(r"```.*?```", "", _read(rel), flags=re.DOTALL)   # code blocks
@@ -277,7 +293,7 @@ class TestLinksAndImages(unittest.TestCase):
         planned = _read(PLANNED_IMAGES_README)
         text = _read("docs/index.html")
         ids = _html_ids(text)
-        targets = re.findall(r'\s(?:src|href|srcset)="([^"]+)"', text)
+        targets = re.findall(r'\s(?:src|href|srcset|poster)="([^"]+)"', text)
         self.assertGreater(len(targets), 20)
         for target in targets:
             self._check_target("docs/index.html", target, planned, html_ids=ids)
@@ -313,6 +329,28 @@ class TestLinksAndImages(unittest.TestCase):
             with self.subTest(image=name):
                 self.assertIn(f"img/{name}", tutorial)
                 self.assertIn(name, _read(PLANNED_IMAGES_README))
+
+    def test_screen_recording_is_referenced(self):
+        # the video and its poster on the project page, the GIF in the README and in the tutorial
+        # (GitHub shows a GIF in place but only links to a video file), all three listed in docs/img/README.md
+        page, readme, tutorial = _read("docs/index.html"), _read("README.md"), _read("docs/review_tool.md")
+        self.assertIn('<source src="img/review_demo.mp4" type="video/mp4">', page)
+        self.assertIn('poster="img/review_demo_poster.png"', page)
+        self.assertIn('src="docs/img/review_demo.gif"', readme)
+        self.assertIn("(img/review_demo.gif)", tutorial)
+        video = re.search(r"<video\b[^>]*>", page).group(0)
+        for attr in ("controls", "muted", "playsinline", 'aria-label="'):
+            with self.subTest(attribute=attr):
+                self.assertIn(attr, video)
+        self.assertNotIn("autoplay", video)             # site.js starts it, and not under reduced motion
+        self.assertIn("prefers-reduced-motion", _read("docs/site.js"))
+        listed = _read(PLANNED_IMAGES_README)
+        for rel in RECORDING_FILES:
+            with self.subTest(file=rel):
+                self.assertTrue(os.path.isfile(os.path.join(ROOT, rel)), rel)
+                self.assertIn(os.path.basename(rel), listed)
+        self.assertIn(RECORDING_SCRIPT, listed)
+        self.assertTrue(os.path.isfile(os.path.join(ROOT, RECORDING_SCRIPT)))
 
     def test_markdown_tables_are_not_split(self):
         # A table row after a blank line, without a header separator under it, renders as a
@@ -361,9 +399,13 @@ class TestFigures(unittest.TestCase):
 
         if not os.path.isdir(os.path.join(ROOT, ".git")) or not shutil.which("git"):
             self.skipTest("not a git checkout")
-        paths = FIGURE_FILES + PAGE_FILES + ["docs/.nojekyll", "figures/make_figures.py"]
+        paths = FIGURE_FILES + PAGE_FILES + ["docs/.nojekyll", "figures/make_figures.py"] + RECORDING_FILES + [RECORDING_SCRIPT]
         r = subprocess.run(["git", "check-ignore", "--no-index", *paths], cwd=ROOT, capture_output=True, text=True)
         self.assertEqual(r.stdout.strip(), "", "ignored by .gitignore")
+        # ... and the exceptions are for these files only: other videos, GIFs and images stay ignored
+        others = ["docs/img/other.mp4", "docs/img/other.gif", "docs/img/other.png", "review_demo.mp4", "docs/review_demo.gif"]
+        r = subprocess.run(["git", "check-ignore", "--no-index", *others], cwd=ROOT, capture_output=True, text=True)
+        self.assertEqual(sorted(r.stdout.split()), sorted(others), "a media file would not be ignored")
 
 
 class TestConfigReference(unittest.TestCase):
@@ -628,6 +670,82 @@ class TestAuthorsAndWeights(unittest.TestCase):
                 self.assertEqual(data[i + 1], 0xDA, "no start of scan found")
                 # APP1..APP15 (EXIF, XMP, ICC, ...) and COM segments must not be present
                 self.assertEqual([m for m in markers if 0xE1 <= m <= 0xEF or m == 0xFE], [])
+
+    def test_screen_recording_carries_no_metadata(self):
+        import struct
+
+        def data_of(rel):
+            with open(os.path.join(ROOT, rel), "rb") as f:
+                return f.read()
+
+        # what must not be in any text of a published file: a local path, a user folder, an e-mail address
+        private = re.compile(rb"(?<![\w])[A-Za-z]:[\\/]|Users|AppData|/home/|[\w.+-]+@[\w-]+\.[\w.-]+")
+
+        # PNG poster: image data only, no text, time or profile chunk, and nothing after the end chunk
+        data = data_of("docs/img/review_demo_poster.png")
+        self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+        i, chunks = 8, []
+        while i + 12 <= len(data):
+            size, kind = struct.unpack(">I4s", data[i:i + 8])
+            chunks.append(kind)
+            i += 12 + size
+        self.assertEqual(i, len(data), "bytes after the last PNG chunk")
+        self.assertEqual(chunks[0], b"IHDR")
+        self.assertEqual(chunks[-1], b"IEND")
+        self.assertEqual(set(chunks) - {b"IHDR", b"PLTE", b"IDAT", b"IEND"}, set())
+
+        # GIF: frames and the loop count only; no comment, no plain text, no other application block
+        data = data_of("docs/img/review_demo.gif")
+        self.assertEqual(data[:6], b"GIF89a")
+        flags = data[10]
+        i = 13 + (3 * 2 ** ((flags & 7) + 1) if flags & 0x80 else 0)
+
+        def skip_sub_blocks(i):
+            while data[i]:
+                i += 1 + data[i]
+            return i + 1
+
+        frames = 0
+        while data[i] != 0x3B:                                   # trailer
+            if data[i] == 0x2C:                                  # image descriptor
+                lflags = data[i + 9]
+                i += 10 + (3 * 2 ** ((lflags & 7) + 1) if lflags & 0x80 else 0)
+                i = skip_sub_blocks(i + 1)                       # after the LZW code size
+                frames += 1
+                continue
+            self.assertEqual(data[i], 0x21, "unknown GIF block")
+            label = data[i + 1]
+            self.assertIn(label, (0xF9, 0xFF), "GIF comment or plain-text block")
+            if label == 0xFF:
+                self.assertEqual(data[i + 3:i + 14], b"NETSCAPE2.0")
+            i = skip_sub_blocks(i + 2)
+        self.assertEqual(i, len(data) - 1, "bytes after the GIF trailer")
+        self.assertGreater(frames, 50)
+
+        # MP4: the container (everything outside the stream data) holds no tag and no private string;
+        # the only free text in the stream is the settings string that x264 writes, which holds none either
+        data = data_of("docs/img/review_demo.mp4")
+        i, boxes = 0, {}
+        while i + 8 <= len(data):
+            size, kind = struct.unpack(">I4s", data[i:i + 8])
+            self.assertGreaterEqual(size, 8, "64-bit or open-ended MP4 box")
+            boxes[kind] = data[i + 8:i + size]
+            i += size
+        self.assertEqual(i, len(data))
+        self.assertEqual(set(boxes) - {b"ftyp", b"moov", b"free", b"mdat"}, set(), "unexpected top-level MP4 box")
+        self.assertLess(data.find(b"moov"), data.find(b"mdat"), "the index must come first, for streaming")
+        container = boxes[b"ftyp"] + boxes[b"moov"]
+        for tag in (b"\xa9too", b"\xa9nam", b"\xa9cmt", b"\xa9day", b"\xa9ART", b"Lavf", b"loci", b"\xa9xyz"):
+            with self.subTest(tag=tag):
+                self.assertNotIn(tag, container)
+        self.assertNotIn(b"soun", boxes[b"moov"])                 # no audio track
+        for run in re.findall(rb"[\x20-\x7e]{6,}", container):
+            with self.subTest(text=run[:40]):
+                self.assertIsNone(private.search(run))
+        settings = re.findall(rb"x264 - core[\x20-\x7e]*", boxes[b"mdat"])
+        self.assertLessEqual(len(settings), 1)
+        for run in settings:
+            self.assertIsNone(private.search(run.replace(b"http://www.videolan.org/x264.html", b"")))
 
 
 if __name__ == "__main__":

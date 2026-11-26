@@ -10,7 +10,9 @@ venv/
 # Patterns use [xX] character classes so that they also match upper-case
 # extensions when git runs with core.ignorecase=false (the Linux default).
 
-# Outputs: videos, streams and partial downloads (they may show people unmasked)
+# Outputs: videos, streams and partial downloads (they may show people unmasked).
+# The one video that is committed is the synthetic screen recording of the review
+# demo, docs/img/review_demo.mp4; it is listed by name with the image exceptions below.
 *.[mM][pP]4
 *.[mM]4[vV]
 *.[mM][oO][vV]
@@ -58,7 +60,9 @@ workers/
 
 # Images and archives of frames (they may show people unmasked). The only
 # exceptions are listed by name at the end of this section: the synthetic
-# documentation images and the approved masked example stills in docs/img.
+# documentation images, the synthetic screen recording of the review demo
+# (the one video and the one GIF, with its poster frame) and the approved
+# masked example stills in docs/img. No wildcard: every file is named.
 *.[jJ][pP][gG]
 *.[jJ][pP][eE][gG]
 *.[jJ][pP][eE]
@@ -85,6 +89,9 @@ workers/
 !/docs/img/review_edit_box.png
 !/docs/img/review_magnifier.png
 !/docs/img/review_unsure_note.png
+!/docs/img/review_demo.mp4
+!/docs/img/review_demo.gif
+!/docs/img/review_demo_poster.png
 !/docs/img/example_farmA_1.jpg
 !/docs/img/example_farmA_2.jpg
 !/docs/img/example_farmB_1.jpg

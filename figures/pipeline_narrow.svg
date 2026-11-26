@@ -1,14 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 1032" width="340" height="1032" role="img" aria-labelledby="pn-t pn-d">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 832" width="340" height="832" role="img" aria-labelledby="pn-t pn-d">
 <title id="pn-t">OpenVeil pipeline</title>
-<desc id="pn-d">Detection on a GPU: videos, a scan schedule, the Grounding DINO proposer and the DINOv3 crop verifier write one box table per video. Then, without a GPU: a person checks the hard frames in the review tool, the boxes are enlarged, held and mosaicked with a smart cut, and every masked file is checked against its source before release.</desc>
+<desc id="pn-d">Detection on a GPU: videos, a scan schedule, the Grounding DINO proposer, which proposes person boxes broadly at a low threshold, and the DINOv3 crop verifier, which judges each crop and keeps the people, write one box table per video. Then, without a GPU: a person checks the hard frames in the review tool, the boxes are enlarged, held and mosaicked with a smart cut, and every masked file is checked against its source before release.</desc>
 
 <style>
   text { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; fill: #24292f; }
   .t { font-size: 14px; font-weight: 600; }
   .d { font-size: 12px; fill: #57606a; }
+  .k { font-weight: 600; fill: #24292f; }
   .h { font-size: 12px; font-weight: 600; letter-spacing: .04em; fill: #57606a; }
+  .p { font-size: 12px; font-weight: 600; fill: #2a7354; }
+  .tie { stroke: #2f7d5b; stroke-width: 1.5; fill: none; stroke-linejoin: round; stroke-linecap: round; }
   .box { fill: #ffffff; stroke: #d0d7de; stroke-width: 1; }
-  .box.key { fill: #e8f3ee; stroke: #2f7d5b; }
+  .box.pair { stroke: #2f7d5b; stroke-width: 1.5; }
+  .box.key { fill: #e8f3ee; stroke: #2f7d5b; stroke-width: 1.5; }
   .box.human { fill: #fff8e8; stroke: #c98500; }
   .box.out { fill: #e9f1f8; stroke: #2a6f9f; }
   .band { fill: #f6f8fa; stroke: none; }
@@ -18,7 +22,11 @@
   @media (prefers-color-scheme: dark) {
     text { fill: #e6edf3; }
     .d, .h { fill: #9da7b3; }
+    .k { fill: #e6edf3; }
     .box { fill: #161b22; stroke: #3d444d; }
+    .p { fill: #5fb891; }
+    .tie { stroke: #4aa37c; }
+    .box.pair { stroke: #4aa37c; }
     .box.key { fill: #12261e; stroke: #4aa37c; }
     .box.human { fill: #2a2110; stroke: #c98500; }
     .box.out { fill: #10202e; stroke: #4b8fc4; }
@@ -26,51 +34,50 @@
     .edge { stroke: #9da7b3; } .arrow { fill: #9da7b3; }
   }
 </style>
-<text class="h" x="20" y="24">ON A GPU (1-4), THEN NO GPU (5-8)</text>
-<rect class="box " x="20" y="40" width="300" height="100" rx="8"/>
+<rect class="band" x="4" y="4" width="332" height="408" rx="12"/>
+<text class="h" x="20" y="28">DETECT, ON A GPU, ONCE PER VIDEO</text>
+<rect class="box " x="20" y="40" width="300" height="72" rx="8"/>
 <text class="t" x="32" y="63">1  Videos</text>
 <text class="d" x="32" y="83">Any number, any length.</text>
 <text class="d" x="32" y="99">Decoded in 60 s chunks</text>
-<rect class="box " x="20" y="164" width="300" height="100" rx="8"/>
-<text class="t" x="32" y="187">2  Scan schedule</text>
-<text class="d" x="32" y="207">A check every 1 s; every 0.2 s</text>
-<text class="d" x="32" y="223">after a hit. 0.0508 calls/frame</text>
-<text class="d" x="32" y="239">(case study, sparse at night)</text>
-<path class="edge" d="M170 140 L170 156"/><polygon class="arrow" points="170,164 166,156 174,156"/>
-<rect class="box " x="20" y="288" width="300" height="100" rx="8"/>
-<text class="t" x="32" y="311">3  Proposer</text>
-<text class="d" x="32" y="331">Grounding DINO, text prompt.</text>
-<text class="d" x="32" y="347">Keeps boxes scoring ≥ 0.05:</text>
-<text class="d" x="32" y="363">recall first</text>
-<path class="edge" d="M170 264 L170 280"/><polygon class="arrow" points="170,288 166,280 174,280"/>
-<rect class="box key" x="20" y="412" width="300" height="100" rx="8"/>
-<text class="t" x="32" y="435">4  Verifier</text>
-<text class="d" x="32" y="455">DINOv3 ViT-L/16 + LoRA crop</text>
-<text class="d" x="32" y="471">classifier. Keeps a box if</text>
-<text class="d" x="32" y="487">p(person) ≥ 0.10</text>
-<path class="edge" d="M170 388 L170 404"/><polygon class="arrow" points="170,412 166,404 174,404"/>
-<rect class="box " x="20" y="536" width="300" height="100" rx="8"/>
-<text class="t" x="32" y="559">5  Box table</text>
-<text class="d" x="32" y="579">Box rules, gap interpolation.</text>
-<text class="d" x="32" y="595">One small .json.gz per video;</text>
-<text class="d" x="32" y="611">rules re-apply without a GPU</text>
-<path class="edge" d="M170 512 L170 528"/><polygon class="arrow" points="170,536 166,528 174,528"/>
-<rect class="box human" x="20" y="660" width="300" height="100" rx="8"/>
-<text class="t" x="32" y="683">6  Review tool</text>
-<text class="d" x="32" y="703">A person checks the hard</text>
-<text class="d" x="32" y="719">frames: 0.6 s median per</text>
-<text class="d" x="32" y="735">frame. Writes overrides</text>
-<path class="edge" d="M170 636 L170 652"/><polygon class="arrow" points="170,660 166,652 174,652"/>
-<rect class="box " x="20" y="784" width="300" height="100" rx="8"/>
-<text class="t" x="32" y="807">7  Mosaic + smart cut</text>
-<text class="d" x="32" y="827">Box +20% per side, held ±2 s.</text>
-<text class="d" x="32" y="843">Only GOPs with a mosaic are</text>
-<text class="d" x="32" y="859">re-encoded: 12.0% of packets</text>
-<path class="edge" d="M170 760 L170 776"/><polygon class="arrow" points="170,784 166,776 174,776"/>
-<rect class="box out" x="20" y="908" width="300" height="100" rx="8"/>
-<text class="t" x="32" y="931">8  Verified release</text>
-<text class="d" x="32" y="951">Each file checked against</text>
-<text class="d" x="32" y="967">its source: all 1,023 masked</text>
-<text class="d" x="32" y="983">videos passed</text>
-<path class="edge" d="M170 884 L170 900"/><polygon class="arrow" points="170,908 166,900 174,900"/>
+<rect class="box " x="20" y="136" width="300" height="72" rx="8"/>
+<text class="t" x="32" y="159">2  Scan schedule</text>
+<text class="d" x="32" y="179">A check every 1 s; every 0.2 s after a hit.</text>
+<text class="d" x="32" y="195">0.0508 calls/frame (case study, sparse at night)</text>
+<path class="edge" d="M170 112 L170 128"/><polygon class="arrow" points="170,136 166,128 174,128"/>
+<rect class="box pair" x="20" y="232" width="300" height="72" rx="8"/>
+<text class="t" x="32" y="255">3  Proposer</text>
+<text class="d" x="32" y="275"><tspan class="k">Proposes broadly:</tspan> every box Grounding DINO</text>
+<text class="d" x="32" y="291">scores ≥ 0.05 (a low threshold) is a candidate</text>
+<path class="edge" d="M170 208 L170 224"/><polygon class="arrow" points="170,232 166,224 174,224"/>
+<rect class="box key" x="20" y="328" width="300" height="72" rx="8"/>
+<text class="t" x="32" y="351">4  Verifier</text>
+<text class="d" x="32" y="371"><tspan class="k">Judges each crop:</tspan> keeps a box only if</text>
+<text class="d" x="32" y="387">p(person) ≥ 0.10 (DINOv3 ViT-L/16 + LoRA)</text>
+<path class="edge" d="M170 304 L170 320"/><polygon class="arrow" points="170,328 166,320 174,320"/>
+<rect class="band" x="4" y="420" width="332" height="408" rx="12"/>
+<text class="h" x="20" y="444">REVIEW AND APPLY, NO GPU</text>
+<rect class="box " x="20" y="456" width="300" height="72" rx="8"/>
+<text class="t" x="32" y="479">5  Box table</text>
+<text class="d" x="32" y="499">Box rules, gap interpolation. One small .json.gz</text>
+<text class="d" x="32" y="515">per video; rules re-apply without a GPU</text>
+<rect class="box human" x="20" y="552" width="300" height="72" rx="8"/>
+<text class="t" x="32" y="575">6  Review tool</text>
+<text class="d" x="32" y="595">A person checks the hard frames: 0.6 s median</text>
+<text class="d" x="32" y="611">per frame. Writes overrides</text>
+<path class="edge" d="M170 528 L170 544"/><polygon class="arrow" points="170,552 166,544 174,544"/>
+<rect class="box " x="20" y="648" width="300" height="72" rx="8"/>
+<text class="t" x="32" y="671">7  Mosaic + smart cut</text>
+<text class="d" x="32" y="691">Box +20% per side, held ±2 s. Only GOPs with</text>
+<text class="d" x="32" y="707">a mosaic are re-encoded: 12.0% of packets</text>
+<path class="edge" d="M170 624 L170 640"/><polygon class="arrow" points="170,648 166,640 174,640"/>
+<rect class="box out" x="20" y="744" width="300" height="72" rx="8"/>
+<text class="t" x="32" y="767">8  Verified release</text>
+<text class="d" x="32" y="787">Each file checked against its source:</text>
+<text class="d" x="32" y="803">all 1,023 masked videos passed</text>
+<path class="edge" d="M170 720 L170 736"/><polygon class="arrow" points="170,744 166,736 174,736"/>
+<path class="tie" d="M15,233 h-5 v166 h5"/>
+<text class="p" x="158" y="320" text-anchor="end">propose broadly,</text>
+<text class="p" x="182" y="320">then verify each crop</text>
+<path class="edge" d="M292 400 L292 448"/><polygon class="arrow" points="292,456 288,448 296,448"/>
 </svg>

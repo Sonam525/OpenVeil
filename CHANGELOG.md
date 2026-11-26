@@ -4,6 +4,49 @@ All notable changes to OpenVeil are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+Documentation only; the package is unchanged (still 1.1.0).
+
+### Changed
+
+- The README, the project page and the documents in `docs/` now follow the
+  paper. The introduction says what OpenVeil is for (any footage in which
+  people have to be hidden and something else is the subject) and what it has
+  been tested on (one case study, calf barns on two farms). "How it works"
+  opens with the design idea: a detector proposes broadly, a classifier judges
+  each crop, and a person reviews where errors are likely.
+- The results are the paper's: people covered and frames with a false box on
+  the test set, the comparison of OpenVeil with single detectors and a face
+  detector under one protocol at fixed false-box budgets, the verifier
+  variants, the threshold rules, the margins and the scan schedule. The
+  development trials on the validation set are kept in
+  `docs/design_rationale.md` and marked as such.
+- The frame sets are named in plain words, as in the paper: test set,
+  validation set, everyday sample and training set, in place of the code names
+  used before. The entry of 1.1.0 below was reworded in the same way; what
+  it records is unchanged.
+- The labels are described as they were made: LLM agents pre-labelled the
+  training set and the validation set, and one of the authors then reviewed
+  every frame of both. The validation labels are no longer described as
+  unreviewed.
+- The schedule-replay figures are those of the replay with the container rule
+  (0.086 detector calls per frame; about 296 A10-hours for the day schedule at
+  all hours: 205 Grounding DINO + 91 verifier).
+- The banner now shows four kinds of footage (a calf barn, a factory, a
+  laboratory and a wildlife camera), and the pipeline figure marks the proposer
+  and the verifier as a pair.
+
+### Added
+
+- A short screen recording of the review tool on its synthetic demo
+  (`docs/img/review_demo.mp4`, `review_demo.gif` and a poster frame), made by
+  `figures/record_review_demo.py` and shown on the project page, in the README
+  and in the review tutorial. The tests check that the three files are not
+  ignored by git and carry no metadata.
+- `docs/usage.md`: a section on using OpenVeil on footage other than calf
+  barns.
+
 ## [1.1.0] - 2026-11-24
 
 The corrected release. It supersedes 1.0.0, which was published from an
@@ -61,11 +104,12 @@ cites all versions. See [Citing OpenVeil](README.md#citing-openveil).
 
 ### Fixed
 
-- The documentation now states the caveats of the HUM731 evaluation: the
-  verifier was cross-fitted over the HUM731 videos (each scoring model had the
-  other half in its training data), the HUM731 boxes were drawn while checking
-  the pipeline's proposals, and the 0.10 threshold and the container rule were
-  chosen with HUM731 in view, so full coverage holds partly by construction.
+- The documentation now states the caveats of the test-set evaluation: the
+  verifier was cross-fitted over the test-set videos (each scoring model had
+  the other half in its training data), the test-set boxes were drawn while
+  checking the pipeline's proposals, and the 0.10 threshold and the container
+  rule were chosen with the test set in view, so full coverage holds partly by
+  construction.
 - Corrected figures in the documentation: the schedule-replay cost (about
   295 A10-hours: 204 Grounding DINO + 91 classifier), the verifier speed
   (287 crops/s on the GPU alone, 247 end to end), the share of frames with a big

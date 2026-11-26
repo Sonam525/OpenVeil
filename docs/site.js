@@ -1,5 +1,7 @@
-/* OpenVeil project page: enlarge an image in place, and copy code blocks.
-   The page works without this script: every image is also a plain link. */
+/* OpenVeil project page: enlarge an image in place, copy code blocks, and play the
+   silent screen recording while it is in view.
+   The page works without this script: every image is also a plain link, and the
+   recording has its own controls. */
 
 function setupZoom() {
   const dlg = document.getElementById("zoom");
@@ -36,5 +38,28 @@ function setupCopy() {
   });
 }
 
+function setupRecording() {
+  // Play the muted recording while it is on screen, like an animated image. Not when the
+  // visitor asks for reduced motion, and not again after they have paused it themselves.
+  const v = document.querySelector("video[data-inview]");
+  if (!v || !("IntersectionObserver" in window)) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  let byScript = false, userPaused = false;
+  v.addEventListener("pause", () => { if (!byScript) userPaused = true; byScript = false; });
+  v.addEventListener("play", () => { userPaused = false; });
+  new IntersectionObserver(entries => {
+    const seen = entries[entries.length - 1].isIntersecting;
+    if (seen && v.paused && !userPaused) {
+      v.muted = true;
+      const p = v.play();
+      if (p) p.catch(() => {});
+    } else if (!seen && !v.paused) {
+      byScript = true;
+      v.pause();
+    }
+  }, { threshold: 0.6 }).observe(v);
+}
+
 setupZoom();
 setupCopy();
+setupRecording();

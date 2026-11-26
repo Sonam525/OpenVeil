@@ -60,7 +60,8 @@ proposer:
 
 The verifier then sees candidates from a different prompt than the one it was
 trained with, so check it on your own footage (see
-[limitations.md](limitations.md)).
+[limitations.md](limitations.md) and the steps for
+[other footage](usage.md#other-footage-than-calf-barns)).
 
 **Verifier** (`verifier`)
 

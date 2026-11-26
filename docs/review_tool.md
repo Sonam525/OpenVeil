@@ -3,11 +3,32 @@
 No detector is perfect. Before you release a dataset you need a person to look
 at the frames where the pipeline is most likely to be wrong, fix them, and
 count what they found. The OpenVeil review tool makes that fast: in the case
-study one reviewer decided 3,194 frames in about 2.4 hours of active work, with
-a median of 0.6 s per frame.
+study it logged decisions for 3,194 frames in about 2.4 hours of active work by
+one reviewer, with a median of 0.6 s per frame. The reviewer checks proposed
+boxes and rarely has to draw one: most corrections are removals, and a box is
+removed with one key.
 
 The tool is a single local web page served by a small Python server that uses
 only the standard library. It runs on your own computer; nothing is uploaded.
+
+**See it in use (45 s, no sound).** The recording below shows the tool on its
+synthetic demo: the frames are drawn, and nobody in them is real.
+
+[![Screen recording of the OpenVeil review tool on synthetic demo data: a correct proposal is accepted with Enter, a box on a calf is deleted with X, a missed person is fixed by clicking a dashed candidate and by drawing a box, the magnifier is held over a half-hidden figure, a frame is marked unsure with a note, and a loose box is resized by its handles.](img/review_demo.gif)](https://sonam525.github.io/OpenVeil/#review)
+
+What happens in it, in order: a correct proposal is accepted with `Enter`; a
+box on a calf is deleted with `X`; a missed person gets a box with one click on
+a dashed candidate, and a second person by drawing a box; the magnifier (hold
+`Z`) inspects a figure half hidden behind a fence; that frame is marked unsure
+with a note; a loose box is resized by its handles. Captions above the page
+name each step, and the queue selector shows the progress of each queue. Click
+the recording to open the project page, which has the same recording as a
+video that can be paused; the file is
+[img/review_demo.mp4](img/review_demo.mp4) (1280 x 800, 1.3 MB). To click
+through the same frames yourself, start the demo
+([section 1](#1-try-the-demo)).
+
+The same page as a still:
 
 ![The review tool: queue selector and filters at the top, the frame in the centre, the side panel with boxes, candidates and buttons on the right.](img/review_overview.png)
 
@@ -42,6 +63,11 @@ The demo has small queues with deliberate cases: a box on an animal shape that
 should be deleted, a figure the proposal missed, a box that is too loose, and
 person-free frames for a random audit. Work through them while you read the
 steps below.
+
+The demo starts with a few frames already decided, so that the queue selector
+shows some progress. The recording at the top of this page was made from an
+empty demo; to see its first two frames in your own demo, untick **skip
+reviewed** in the top bar.
 
 ## 2. The screen
 

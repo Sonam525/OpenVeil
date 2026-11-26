@@ -14,6 +14,7 @@ verifier weights. Every setting of the `production` preset is listed in
 - [Mask your own videos](#mask-your-own-videos)
 - [Mask still images](#mask-still-images)
 - [A config file](#a-config-file)
+- [Other footage than calf barns](#other-footage-than-calf-barns)
 - [Verifier weights](#verifier-weights)
 - [Tests](#tests)
 
@@ -157,6 +158,39 @@ proposer:
   positive_phrases: [worker, person]
   competitor_phrases: [horse]
 ```
+
+## Other footage than calf barns
+
+OpenVeil is meant for any footage in which people have to be hidden and
+something else is the subject: other farms, factories, laboratories,
+warehouses, wildlife cameras. So far it has been tested on calf barns only,
+and the released verifier was trained on calf-barn crops only. On other
+footage the code and the procedure carry over, and the weights are a starting
+point:
+
+1. **Detect** with the released verifier and the default `always_full` policy,
+   which uses the day schedule at all hours. If animals or machines in your
+   footage are mistaken for people, name them as competitor phrases in the
+   prompt (see above).
+2. **Review** the queues that `openveil review build` makes: the largest
+   mosaics, the giant-rule frames, a random sample and, when the candidates
+   were stored, those just below the verifier threshold.
+3. **Adjust.** If the review finds false alarms or misses, set a new
+   `verifier.threshold` on the reviewed frames, or train a new verifier on
+   them with the `openveil.train` package (`openveil review export` writes the
+   reviewed boxes to `human_labels.json`). In the case study, training took
+   35 min on one A10 GPU. Keep the frames you use to evaluate the verifier out
+   of its training.
+4. **Apply** the boxes and the review corrections. Then have a person check a
+   random sample of the masked frames, and keep the count as evidence for the
+   dataset card.
+
+Set the threshold on your own reviewed frames: in the case study the share of
+frames with a false box depended strongly on the frames on which the threshold
+was set ([design_rationale.md](design_rationale.md#5-how-the-final-architecture-was-reached)).
+Most of the compute goes to the proposer, so the scan schedule and the
+day/night policy are the first settings to change when compute is limited
+([configuration.md](configuration.md)).
 
 ## Verifier weights
 

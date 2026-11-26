@@ -1,14 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 352" width="1000" height="352" role="img" aria-labelledby="pw-t pw-d">
 <title id="pw-t">OpenVeil pipeline</title>
-<desc id="pw-d">Detection on a GPU: videos, a scan schedule, the Grounding DINO proposer and the DINOv3 crop verifier write one box table per video. Then, without a GPU: a person checks the hard frames in the review tool, the boxes are enlarged, held and mosaicked with a smart cut, and every masked file is checked against its source before release.</desc>
+<desc id="pw-d">Detection on a GPU: videos, a scan schedule, the Grounding DINO proposer, which proposes person boxes broadly at a low threshold, and the DINOv3 crop verifier, which judges each crop and keeps the people, write one box table per video. Then, without a GPU: a person checks the hard frames in the review tool, the boxes are enlarged, held and mosaicked with a smart cut, and every masked file is checked against its source before release.</desc>
 
 <style>
   text { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; fill: #24292f; }
   .t { font-size: 14px; font-weight: 600; }
   .d { font-size: 12px; fill: #57606a; }
+  .k { font-weight: 600; fill: #24292f; }
   .h { font-size: 12px; font-weight: 600; letter-spacing: .04em; fill: #57606a; }
+  .p { font-size: 12px; font-weight: 600; fill: #2a7354; }
+  .tie { stroke: #2f7d5b; stroke-width: 1.5; fill: none; stroke-linejoin: round; stroke-linecap: round; }
   .box { fill: #ffffff; stroke: #d0d7de; stroke-width: 1; }
-  .box.key { fill: #e8f3ee; stroke: #2f7d5b; }
+  .box.pair { stroke: #2f7d5b; stroke-width: 1.5; }
+  .box.key { fill: #e8f3ee; stroke: #2f7d5b; stroke-width: 1.5; }
   .box.human { fill: #fff8e8; stroke: #c98500; }
   .box.out { fill: #e9f1f8; stroke: #2a6f9f; }
   .band { fill: #f6f8fa; stroke: none; }
@@ -18,7 +22,11 @@
   @media (prefers-color-scheme: dark) {
     text { fill: #e6edf3; }
     .d, .h { fill: #9da7b3; }
+    .k { fill: #e6edf3; }
     .box { fill: #161b22; stroke: #3d444d; }
+    .p { fill: #5fb891; }
+    .tie { stroke: #4aa37c; }
+    .box.pair { stroke: #4aa37c; }
     .box.key { fill: #12261e; stroke: #4aa37c; }
     .box.human { fill: #2a2110; stroke: #c98500; }
     .box.out { fill: #10202e; stroke: #4b8fc4; }
@@ -29,7 +37,9 @@
 <rect class="band" x="4" y="8" width="992" height="164" rx="12"/>
 <rect class="band" x="4" y="180" width="992" height="164" rx="12"/>
 <text class="h" x="20" y="36">DETECT, ON A GPU, ONCE PER VIDEO</text>
-<text class="h" x="146" y="208">REVIEW AND APPLY, NO GPU NEEDED</text>
+<text class="h" x="20" y="208">REVIEW AND APPLY, NO GPU</text>
+<path class="tie" d="M521,51 v-5 h470 v5"/>
+<text class="p" x="756" y="36" text-anchor="middle">A detector proposes broadly, then a classifier verifies each candidate</text>
 <rect class="box " x="20" y="56" width="222" height="104" rx="8"/>
 <text class="t" x="32" y="79">1  Videos</text>
 <text class="d" x="32" y="99">Any number, any length.</text>
@@ -39,16 +49,16 @@
 <text class="d" x="282" y="99">A check every 1 s; every 0.2 s</text>
 <text class="d" x="282" y="115">after a hit. 0.0508 calls/frame</text>
 <text class="d" x="282" y="131">(case study, sparse at night)</text>
-<rect class="box " x="520" y="56" width="222" height="104" rx="8"/>
+<rect class="box pair" x="520" y="56" width="222" height="104" rx="8"/>
 <text class="t" x="532" y="79">3  Proposer</text>
-<text class="d" x="532" y="99">Grounding DINO, text prompt.</text>
-<text class="d" x="532" y="115">Keeps boxes scoring ≥ 0.05:</text>
-<text class="d" x="532" y="131">recall first</text>
+<text class="d" x="532" y="99"><tspan class="k">Proposes broadly:</tspan> every box</text>
+<text class="d" x="532" y="115">Grounding DINO scores ≥ 0.05</text>
+<text class="d" x="532" y="131">(a low threshold) is a candidate</text>
 <rect class="box key" x="770" y="56" width="222" height="104" rx="8"/>
 <text class="t" x="782" y="79">4  Verifier</text>
-<text class="d" x="782" y="99">DINOv3 ViT-L/16 + LoRA crop</text>
-<text class="d" x="782" y="115">classifier. Keeps a box if</text>
-<text class="d" x="782" y="131">p(person) ≥ 0.10</text>
+<text class="d" x="782" y="99"><tspan class="k">Judges each crop:</tspan> keeps a box</text>
+<text class="d" x="782" y="115">only if p(person) ≥ 0.10</text>
+<text class="d" x="782" y="131">(DINOv3 ViT-L/16 + LoRA)</text>
 <rect class="box " x="20" y="228" width="222" height="104" rx="8"/>
 <text class="t" x="32" y="251">5  Box table</text>
 <text class="d" x="32" y="271">Box rules, gap interpolation.</text>
@@ -75,5 +85,5 @@
 <path class="edge" d="M492 280 L512 280"/><polygon class="arrow" points="520,280 512,276 512,284"/>
 <path class="edge" d="M742 108 L762 108"/><polygon class="arrow" points="770,108 762,104 762,112"/>
 <path class="edge" d="M742 280 L762 280"/><polygon class="arrow" points="770,280 762,276 762,284"/>
-<path class="edge" d="M881 160 L881 176 L131 176 L131 220"/><polygon class="arrow" points="131,228 127,220 135,220"/>
+<path class="edge" d="M881 160 L881 176 L214 176 L214 220"/><polygon class="arrow" points="214,228 210,220 218,220"/>
 </svg>

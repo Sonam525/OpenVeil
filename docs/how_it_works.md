@@ -1,6 +1,47 @@
 # How OpenVeil works
 
-This page follows one video through the pipeline, stage by stage, with the
+## The idea: propose broadly, verify each crop, review where errors are likely
+
+OpenVeil hides people in footage whose subject is something else: animals,
+machines, an experiment. It does not rely on one detector to be both complete
+and precise. In the case-study footage no single score threshold did both: set
+high, it missed people who crouch or are half hidden; set low, it put a mosaic
+on the calves that look like them. OpenVeil splits the work in three:
+
+1. **A detector proposes broadly.** Grounding DINO, an open-vocabulary
+   detector, proposes person boxes at a low score threshold (0.05), so that
+   almost no person is missed. Many of its proposals are wrong, and that is
+   accepted at this stage.
+2. **A classifier judges each crop.** The verifier, a DINOv3 image classifier
+   with a LoRA adapter, looks at every proposed box on its own and answers one
+   narrow question: does this crop show a person? Boxes that do not are
+   dropped.
+3. **A person reviews where errors are likely.** A local review tool shows the
+   frames where the pipeline is most likely to be wrong, and each decision
+   becomes a correction of the boxes.
+
+No stage is asked to be perfect. The proposer may be imprecise because the
+verifier follows it; the verifier only has to sort crops, which a classifier
+can learn from few examples of the target footage; and the reviewer checks
+proposed boxes and rarely has to draw one. OpenVeil starts from the view that
+a missed person costs more than a false mosaic, so both thresholds are low.
+
+Detection stores boxes and leaves the pixels untouched. The rules, margins and
+corrections that follow are applied to the stored boxes and can be changed and
+applied again without a GPU.
+
+In the case study (calf barns on two farms, the only footage OpenVeil has been
+tested on so far) the two models together covered all 172 people of a
+human-checked test set with a false box on 3.3% of everyday frames. Limited to
+the same share of false-box frames, Grounding DINO alone covered 71 of them,
+and the best of the other detectors 126. A reviewer drew the test-set boxes
+while checking the pipeline's own proposals, so a person missed by both is not
+counted. How this was measured, and its limits, are in
+[design_rationale.md](design_rationale.md) and [limitations.md](limitations.md).
+
+## The pipeline, stage by stage
+
+The rest of this page follows one video through the pipeline, with the
 values of the `production` preset. These are the values used to mask the
 case-study dataset ([case_study.md](case_study.md)). Why the pipeline looks like
 this is explained in [design_rationale.md](design_rationale.md).
@@ -122,7 +163,11 @@ is an open-vocabulary detector: it finds boxes for the phrases in a text prompt.
 
 Grounding DINO is used with a **low threshold** so that it misses as little as
 possible. That gives many false boxes (calves, cows, posts, shadows). A second
-model, the crop verifier, removes most of them.
+model, the crop verifier, removes most of them. This pair is the core of the
+design: the proposer does not have to be precise, and the verifier does not
+have to find anyone. A verifier can only remove boxes, so the proposer's
+threshold must be low enough for its candidates to include nearly every
+person.
 
 **Candidates.** Boxes with a score ≥ 0.05 are kept. Of two candidates that
 overlap with IoU ≥ 0.6 only the higher-scoring one stays (greedy NMS, best
@@ -149,6 +194,11 @@ under the DINOv3 License, not in this repository (see
 folder. Without them you can run with verifier mode `none`: every candidate whose proposer score reaches the verifier threshold is
 kept. Expect far more false mosaics on footage with animals, and raise the
 threshold or review more.
+
+The released weights were trained on calf-barn footage only. For other
+footage they are a starting point: review frames of your own data, then set
+the threshold on those frames or train a new verifier on them
+([usage.md](usage.md#other-footage-than-calf-barns)).
 
 ## 6. Per-frame rules
 
